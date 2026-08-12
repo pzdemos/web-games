@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>贪吃蛇</title>
+</head>
+<body>
+  <div id="wrap">
+    <div id="bar">
+      <div>分数 <span id="score">0</span></div>
+      <div class="best">最高 <span id="best">0</span></div>
+    </div>
+    <div id="stage">
+      <canvas id="c"></canvas>
+      <div id="combo"></div>
+      <div id="overlay">
+        <h1 id="title">贪吃蛇</h1>
+        <p id="msg">方向键 / WASD 控制移动<br>空格 开始</p>
+        <button id="btn">开始游戏</button>
+      </div>
+    </div>
+    <div class="hint">按 <kbd>空格</kbd> 开始 / 暂停 &nbsp;|&nbsp; <kbd>↑↓←→</kbd> 或 <kbd>WASD</kbd> 移动 &nbsp;|&nbsp; <kbd>R</kbd> 重开</div>
+    <div class="dpad" id="dpad">
+      <button class="up" data-dx="0" data-dy="-1">▲</button>
+      <button class="left" data-dx="-1" data-dy="0">◀</button>
+      <button class="down" data-dx="0" data-dy="1">▼</button>
+      <button class="right" data-dx="1" data-dy="0">▶</button>
+    </div>
+  </div>
+  <div id="setPanel">
+    <div class="ttl">移动速度</div>
+    <div class="now" id="speedNow">普通</div>
+    <div class="opts" id="speedOpts"></div>
+    <div class="sep"></div>
+    <div id="wrapOpt">穿墙: 关</div>
+  </div>
+  <button id="setBtn" aria-label="设置">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

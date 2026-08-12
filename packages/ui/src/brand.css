@@ -1,0 +1,25 @@
+/* ===== 共享品牌标记样式 ===== */
+#wg-brand {
+  position: fixed; left: 0; right: 0; bottom: 8px;
+  text-align: center; font-size: 12px; z-index: 30; pointer-events: none;
+}
+#wg-brand a {
+  text-decoration: none; pointer-events: auto; transition: color .15s;
+  opacity: .55;
+}
+#wg-brand a:hover { opacity: 1; }
+
+/* ===== 共享触控方向键（dpad）样式 ===== */
+.wg-dpad {
+  display: none;
+  gap: 8px; margin-top: 12px; justify-content: center; flex-wrap: wrap;
+}
+@media (hover: none) and (pointer: coarse) {
+  .wg-dpad { display: flex; }
+}
+.wg-dpad button {
+  width: 54px; height: 54px; padding: 0; font-size: 18px;
+  border-radius: 10px; cursor: pointer; border: none;
+  transition: transform .08s, background .12s;
+}
+.wg-dpad button:active { transform: scale(.92); }

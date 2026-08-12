@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>俄罗斯方块 · 小游戏</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23c4b89c'/%3E%3Crect x='14' y='14' width='72' height='50' rx='4' fill='%239bbc0f'/%3E%3Crect x='22' y='22' width='14' height='14' fill='%230f380f'/%3E%3Crect x='40' y='22' width='14' height='14' fill='%23306230'/%3E%3Crect x='58' y='22' width='14' height='14' fill='%238bac0f'/%3E%3Crect x='22' y='40' width='14' height='14' fill='%238bac0f'/%3E%3Crect x='58' y='40' width='14' height='14' fill='%230f380f'/%3E%3Ccircle cx='30' cy='80' r='6' fill='%238a3b2e'/%3E%3Crect x='46' y='76' width='34' height='8' rx='4' fill='%234a4a4a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div class="top">
+    <div class="title">俄罗斯方块</div>
+    <div class="scores">
+      <div class="sc"><div class="l">Score</div><div class="v" id="score">0</div></div>
+      <div class="sc"><div class="l">Level</div><div class="v" id="level">1</div></div>
+      <div class="sc"><div class="l">Lines</div><div class="v" id="lines">0</div></div>
+    </div>
+  </div>
+
+  <div class="layout console">
+    <div class="stage">
+      <canvas id="board"></canvas>
+      <div class="overlay" id="overlay">
+        <h2 id="ovTitle">俄罗斯方块</h2>
+        <p id="ovText">方向键移动 · ↑ 旋转 · 空格硬降</p>
+        <button id="ovBtn">开始游戏</button>
+      </div>
+    </div>
+    <div class="side">
+      <div class="box next">
+        <div class="lbl">下一个</div>
+        <canvas id="next" width="120" height="80"></canvas>
+      </div>
+      <div class="box">
+        <div class="lbl">最高分</div>
+        <div class="val" id="best">0</div>
+      </div>
+      <div class="box">
+        <div class="lbl">操作</div>
+        <div class="btns" style="margin-top:4px;">
+          <button class="ghost" id="pauseBtn">暂停</button>
+          <button id="newBtn">开始</button>
+        </div>
+      </div>
+    </div>
+    <div class="dpad" id="dpad">
+      <button data-act="left" title="左移">◀</button>
+      <button data-act="rot" title="旋转">↻</button>
+      <button data-act="down" title="软降">▼</button>
+      <button data-act="right" title="右移">▶</button>
+      <button data-act="drop" title="硬降">⤓</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    <kbd>←→</kbd> 移动 &nbsp; <kbd>↑</kbd>/<kbd>X</kbd> 旋转 &nbsp; <kbd>↓</kbd> 软降 &nbsp; <kbd>空格</kbd> 硬降 &nbsp; <kbd>P</kbd> 暂停 &nbsp; <kbd>R</kbd> 重开<br>
+    合成满行消除 · 每清 <b>10 行</b> 升一级 · 速度递增
+  </div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

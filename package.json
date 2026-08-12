@@ -1,0 +1,23 @@
+{
+  "name": "web-games-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "网页小游戏 monorepo（贪吃蛇 / 2048 / 俄罗斯方块 / 打砖块）",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "build:snake": "pnpm --filter ./games/snake build",
+    "build:2048": "pnpm --filter ./games/2048 build",
+    "build:tetris": "pnpm --filter ./games/tetris build",
+    "build:brick": "pnpm --filter ./games/brick build",
+    "deploy": "pnpm -r build && pnpm run sync",
+    "preview": "pnpm -r --parallel preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
