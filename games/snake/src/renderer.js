@@ -63,10 +63,27 @@ export class Renderer {
     const { ctx, game: g } = this;
     for (const o of g.obstacles) {
       const px = o.x * g.CELL + 1, py = o.y * g.CELL + 1, s = g.CELL - 2;
-      ctx.fillStyle = '#475569';
+      // 红色发光描边（警示）
+      ctx.save();
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#7f1d1d';
       rr(ctx, px, py, s, s, 3); ctx.fill();
-      ctx.fillStyle = '#334155';
+      ctx.restore();
+      // 内部深红底
+      ctx.fillStyle = '#991b1b';
       ctx.fillRect(px + 2, py + 2, s - 4, s - 4);
+      // 白色 ✕ 标记（一目了然）
+      ctx.strokeStyle = '#fecaca';
+      ctx.lineWidth = Math.max(2, s * 0.14);
+      ctx.lineCap = 'round';
+      const m = s * 0.28;
+      ctx.beginPath();
+      ctx.moveTo(px + m, py + m);
+      ctx.lineTo(px + s - m, py + s - m);
+      ctx.moveTo(px + s - m, py + m);
+      ctx.lineTo(px + m, py + s - m);
+      ctx.stroke();
     }
   }
 
