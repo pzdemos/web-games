@@ -1,5 +1,5 @@
 import {
-  COLS, ROWS, SPEEDS, DEF_SPEED, HEAD_COLOR,
+  COLS, ROWS, SPEEDS, DEF_SPEED, T,
   MULTI_THRESHOLD, BASE_SCORE, COLLAPSE_SCORE,
   GOLD_SCORE, GOLD_LIFETIME, GOLD_INTERVAL, GOLD_SLOW_MS, GOLD_SLOW_DURATION,
   COMBO_WINDOW, OBSTACLE_EVERY
@@ -39,7 +39,7 @@ export class Game {
   setWrap(v) { this.wrap = v; localStorage.setItem('snake_wrap', v ? '1' : '0'); }
 
   reset() {
-    this.headColor = HEAD_COLOR;
+    this.headColor = T().headColor;
     this.bodyColors = [];
     this.foods = [];
     this.gold = null;
@@ -105,8 +105,8 @@ export class Game {
       this.headColor = food.color;
       this.onEat(false);
     } else if (goldHit) {
-      this.bodyColors.unshift('#fde68a');
-      this.headColor = '#fbbf24';
+      this.bodyColors.unshift(T().goldFill);
+      this.headColor = T().goldGlow;
       this.onEat(true);
     } else {
       this.snake.pop();
@@ -141,7 +141,7 @@ export class Game {
     if (this.onCombo) this.onCombo(this.combo, mult, isGold);
 
     this.eaten++;
-    this.eatenRecent.push(isGold ? '#fbbf24' : this.headColor);
+    this.eatenRecent.push(isGold ? T().goldGlow : this.headColor);
     if (this.eatenRecent.length > 3) this.eatenRecent.shift();
     // 3 连同色消除
     if (this.eatenRecent.length === 3 && this.eatenRecent.every(c => c === this.eatenRecent[0])) {
@@ -169,7 +169,7 @@ export class Game {
     const n = Math.min(3, this.bodyColors.length);
     this.bodyColors.splice(0, n);
     for (let i = 0; i < n && this.snake.length > 1; i++) this.snake.pop();
-    this.headColor = HEAD_COLOR;
+    this.headColor = T().headColor;
     this.score += COLLAPSE_SCORE * n;
     this.scoreEl.textContent = String(this.score);
   }

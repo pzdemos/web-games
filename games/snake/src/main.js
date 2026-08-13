@@ -3,16 +3,24 @@ import { Game } from './game.js';
 import { Renderer } from './renderer.js';
 import { Input } from './input.js';
 import { UI } from './ui.js';
+import { setTheme, getTheme, getThemeKey, applyCssVars } from './themes.js';
 import { mountBrand, setFavicon, svgFavicon } from '@wg/ui';
 
-function boot() {
-  // favicon
+function applyFavicon() {
+  const t = getTheme();
   setFavicon(svgFavicon(
     '0 0 100 100',
-    `<rect width='100' height='100' rx='22' fill='#0f172a'/>` +
-    `<path d='M22 60 Q22 32 50 32 Q78 32 78 54 Q78 70 62 70 Q52 70 52 60 Q52 52 60 52' stroke='#38bdf8' stroke-width='9' stroke-linecap='round' fill='none'/>` +
-    `<circle cx='60' cy='52' r='3.5' fill='#38bdf8'/>`
+    `<rect width='100' height='100' rx='22' fill='${t.cssBg}'/>` +
+    `<path d='M22 60 Q22 32 50 32 Q78 32 78 54 Q78 70 62 70 Q52 70 52 60 Q52 52 60 52' stroke='${t.cssAccent}' stroke-width='9' stroke-linecap='round' fill='none'/>` +
+    `<circle cx='60' cy='52' r='3.5' fill='${t.cssAccent}'/>`
   ));
+}
+
+function boot() {
+  // 恢复存储的主题
+  const saved = localStorage.getItem('snake_theme');
+  if (saved) setTheme(saved); else applyCssVars();
+  applyFavicon();
 
   const canvas = document.getElementById('c');
   const scoreEl = document.getElementById('score');
@@ -20,7 +28,14 @@ function boot() {
 
   const game = new Game(canvas, scoreEl, bestEl);
   const renderer = new Renderer(game);
-  const ui = new UI(game);
+
+  // 主题切换回调：刷新蛇头色 + 重绘 + 换 favicon
+  const onThemeChange = () => {
+    game.headColor = getTheme().headColor;
+    renderer.draw();
+    applyFavicon();
+  };
+  const ui = new UI(game, onThemeChange);
 
   game.onGameOver = (s, b) => ui.showGameOver(s, b);
   game.onCombo = (c, m, gold) => ui.flashCombo(c, m, gold);

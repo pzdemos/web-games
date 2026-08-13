@@ -1,4 +1,4 @@
-import { COLS, ROWS, BG, GRID_COLOR } from './constants.js';
+import { COLS, ROWS, T } from './constants.js';
 
 // 圆角矩形辅助
 function rr(ctx, x, y, w, h, r) {
@@ -31,7 +31,8 @@ export class Renderer {
 
   draw() {
     const { ctx, game: g } = this;
-    ctx.fillStyle = BG;
+    const th = T();
+    ctx.fillStyle = th.boardBg;
     ctx.fillRect(0, 0, g.W, g.H);
     this.drawGrid();
     this.drawObstacles();
@@ -43,7 +44,7 @@ export class Renderer {
 
   drawGrid() {
     const { ctx, game: g } = this;
-    ctx.strokeStyle = GRID_COLOR;
+    ctx.strokeStyle = T().gridColor;
     ctx.lineWidth = 1;
     for (let i = 0; i <= COLS; i++) {
       ctx.beginPath();
@@ -61,20 +62,18 @@ export class Renderer {
 
   drawObstacles() {
     const { ctx, game: g } = this;
+    const th = T();
     for (const o of g.obstacles) {
       const px = o.x * g.CELL + 1, py = o.y * g.CELL + 1, s = g.CELL - 2;
-      // 红色发光描边（警示）
       ctx.save();
-      ctx.shadowColor = '#ef4444';
+      ctx.shadowColor = th.obstacleEdge;
       ctx.shadowBlur = 8;
-      ctx.fillStyle = '#7f1d1d';
+      ctx.fillStyle = th.obstacleOuter;
       rr(ctx, px, py, s, s, 3); ctx.fill();
       ctx.restore();
-      // 内部深红底
-      ctx.fillStyle = '#991b1b';
+      ctx.fillStyle = th.obstacleInner;
       ctx.fillRect(px + 2, py + 2, s - 4, s - 4);
-      // 白色 ✕ 标记（一目了然）
-      ctx.strokeStyle = '#fecaca';
+      ctx.strokeStyle = th.obstacleMark;
       ctx.lineWidth = Math.max(2, s * 0.14);
       ctx.lineCap = 'round';
       const m = s * 0.28;
@@ -104,15 +103,16 @@ export class Renderer {
   drawGold() {
     const { ctx, game: g } = this;
     if (!g.gold) return;
+    const th = T();
     const px = g.gold.x * g.CELL, py = g.gold.y * g.CELL;
     const age = performance.now() - g.gold.born;
     const remain = (6000 - age) / 6000;
     const blink = remain < 0.3 ? (Math.sin(age / 80) > 0 ? 1 : 0.3) : 1;
     ctx.save();
     ctx.globalAlpha = blink;
-    ctx.shadowColor = '#fbbf24';
+    ctx.shadowColor = th.goldGlow;
     ctx.shadowBlur = 18;
-    ctx.fillStyle = '#fde68a';
+    ctx.fillStyle = th.goldFill;
     const cx = px + g.CELL / 2, cy = py + g.CELL / 2, r = g.CELL / 2 - 2;
     ctx.translate(cx, cy);
     ctx.rotate(age / 300);
@@ -123,10 +123,11 @@ export class Renderer {
 
   drawSnake() {
     const { ctx, game: g } = this;
+    const th = T();
     for (let i = 0; i < g.snake.length; i++) {
       const seg = g.snake[i];
       const px = seg.x * g.CELL + 1, py = seg.y * g.CELL + 1, s = g.CELL - 2;
-      ctx.fillStyle = i === 0 ? g.headColor : (g.bodyColors[i - 1] || '#38bdf8');
+      ctx.fillStyle = i === 0 ? g.headColor : (g.bodyColors[i - 1] || th.bodyFallback);
       rr(ctx, px, py, s, s, Math.max(3, g.CELL / 6));
       ctx.fill();
       if (i === 0) {
@@ -135,9 +136,8 @@ export class Renderer {
         ctx.fill();
       }
     }
-    // 减速光晕
     if (g.slowUntil && performance.now() < g.slowUntil) {
-      ctx.strokeStyle = 'rgba(251,191,36,.5)';
+      ctx.strokeStyle = th.slowEdge;
       ctx.lineWidth = 3;
       ctx.strokeRect(1, 1, g.W - 2, g.H - 2);
     }
@@ -145,15 +145,16 @@ export class Renderer {
 
   drawPauseHint() {
     const { ctx, game: g } = this;
-    ctx.fillStyle = 'rgba(15,23,42,.6)';
+    const th = T();
+    ctx.fillStyle = th.pauseOverlay;
     ctx.fillRect(0, 0, g.W, g.H);
-    ctx.fillStyle = '#e2e8f0';
+    ctx.fillStyle = th.pauseText;
     ctx.font = `bold ${Math.floor(g.CELL * 1.1)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('暂停', g.W / 2, g.H / 2 - g.CELL / 2);
     ctx.font = `${Math.floor(g.CELL * .55)}px sans-serif`;
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = th.pauseHint;
     ctx.fillText('空格继续', g.W / 2, g.H / 2 + g.CELL);
   }
 }

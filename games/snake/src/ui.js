@@ -1,9 +1,11 @@
 import { SPEEDS, COMBO_WINDOW, GOLD_SCORE } from './constants.js';
+import { THEMES, getThemeKey, setTheme, applyCssVars } from './themes.js';
 
-// 设置面板（速度 + 穿墙开关）+ 遮罩 + 连击提示
+// 设置面板（速度 + 穿墙开关 + 主题切换）+ 遮罩 + 连击提示
 export class UI {
-  constructor(game) {
+  constructor(game, onChangeTheme) {
     this.game = game;
+    this.onChangeTheme = onChangeTheme;
     this.overlay = document.getElementById('overlay');
     this.titleEl = document.getElementById('title');
     this.msgEl = document.getElementById('msg');
@@ -11,6 +13,7 @@ export class UI {
     this.comboEl = document.getElementById('combo');
     this.buildSpeedPanel();
     this.buildWrapToggle();
+    this.buildThemeToggle();
   }
 
   showOverlay(title, msg, btn) {
@@ -60,6 +63,25 @@ export class UI {
       g.setWrap(!g.wrap);
       wrapEl.classList.toggle('active', g.wrap);
       wrapEl.textContent = g.wrap ? '穿墙: 开' : '穿墙: 关';
+    });
+  }
+
+  buildThemeToggle() {
+    const keys = Object.keys(THEMES);
+    const btn = document.getElementById('themeBtn');
+    const refresh = () => {
+      const cur = getThemeKey();
+      const next = keys[(keys.indexOf(cur) + 1) % keys.length];
+      btn.textContent = `主题: ${THEMES[cur].name}（切换→${THEMES[next].name}）`;
+    };
+    refresh();
+    btn.addEventListener('click', () => {
+      const cur = getThemeKey();
+      const next = keys[(keys.indexOf(cur) + 1) % keys.length];
+      setTheme(next);
+      localStorage.setItem('snake_theme', next);
+      refresh();
+      if (this.onChangeTheme) this.onChangeTheme();
     });
   }
 
