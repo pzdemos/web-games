@@ -288,6 +288,40 @@ table.stats tr:last-child td{border-bottom:none}
 .danger{color:var(--flag); font-size:12px; letter-spacing:.1em}
 .danger:hover{border-color:var(--flag)}
 
+.userchip{
+  display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:10px;
+  border:1px solid var(--line-soft); background:var(--card); backdrop-filter:blur(8px);
+  font-size:13px; color:var(--muted); transition:all .18s ease; max-width:150px;
+}
+.userchip:hover{border-color:var(--line)}
+.userchip .dot{width:8px; height:8px; border-radius:50%; background:var(--faint); flex:none}
+.userchip.logged .dot{background:#86d99c; box-shadow:0 0 8px rgba(134,217,156,.6)}
+.userchip .uname{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.userchip svg{width:15px;height:15px;flex:none}
+.auth-tabs{display:flex; gap:8px; margin-bottom:18px}
+.auth-tabs button{flex:1; padding:9px; border-radius:10px; font-size:13px; letter-spacing:.15em; text-indent:.15em; color:var(--muted); border:1px solid var(--line-soft); transition:all .18s ease}
+.auth-tabs button.on{color:var(--gold-strong); border-color:var(--line); background:linear-gradient(180deg,rgba(216,180,90,.14),rgba(216,180,90,.05))}
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
+.field label{font-size:11px; letter-spacing:.2em; color:var(--faint)}
+.field input{
+  background:var(--opened); border:1px solid var(--line-soft); border-radius:10px; color:var(--text);
+  font-size:15px; padding:11px 14px; outline:none; transition:border .2s; font-family:var(--font-ui);
+}
+.field input:focus{border-color:var(--gold)}
+.field .err{font-size:12px; color:var(--flag); min-height:16px}
+.lb-tabs{display:flex; gap:6px; justify-content:center; margin-bottom:16px; flex-wrap:wrap}
+.lb-tabs button{padding:6px 14px; border-radius:99px; font-size:12px; letter-spacing:.1em; color:var(--muted); border:1px solid var(--line-soft); transition:all .18s ease}
+.lb-tabs button.on{color:var(--gold-strong); border-color:var(--line)}
+table.lb{width:100%; border-collapse:collapse; font-size:13px}
+table.lb th{font-size:10px; letter-spacing:.16em; color:var(--faint); font-weight:500; padding:7px 6px; border-bottom:1px solid var(--line-soft)}
+table.lb td{padding:8px 6px; border-bottom:1px solid var(--line-soft); font-variant-numeric:tabular-nums; color:var(--text)}
+table.lb tr:last-child td{border-bottom:none}
+table.lb td.rk{color:var(--gold); font-family:var(--font-mono); width:36px}
+table.lb tr.me td{background:rgba(216,180,90,.08)}
+table.lb td.user{max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.lb-empty{text-align:center; color:var(--faint); font-size:13px; padding:30px 0; letter-spacing:.1em}
+.lb-myrow{display:flex; justify-content:center; gap:10px; margin-top:14px; font-size:13px; color:var(--gold-strong)}
+
 @media (max-width:640px){
   .wrap{padding:18px 10px 40px}
   h1{font-size:32px}

@@ -139,9 +139,9 @@ var store={
 function todayKey(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function dayIndex(){var d=new Date();return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)}
 function dailyDiffKey(){return DIFF_KEYS[dayIndex()%3]}
-var S={diff:'beginner',mode:'beginner',rows:9,cols:9,mines:10,mine:null,num:null,state:null,openCount:0,flags:0,started:false,over:false,win:false,firstDone:false,time:0,timer:null,exploded:-1,hintsLeft:3,rng:null,dailyDone:false,fxTimers:[]};
+var S={diff:'beginner',mode:'beginner',rows:9,cols:9,mines:10,mine:null,num:null,state:null,openCount:0,flags:0,started:false,over:false,win:false,firstDone:false,time:0,timer:null,exploded:-1,hintsLeft:3,rng:null,dailyDone:false,fxTimers:[],seed:null,moves:[]};
 var els={};
-['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed'].forEach(function(id){els[id]=document.getElementById(id)});
+['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed','lbBtn','userChip','authModal','authUser','authPass','authErr','authGo','tabLogin','tabReg','lbModal','lbTabs','lbBody','lbMyRow','acctModal','acctName','acctSince','acctLb','acctLogout'].forEach(function(id){els[id]=document.getElementById(id)});
 var noGuess=store.get(LS.noguess,true);
 var flagMode=false;
 var cellEls=[];
@@ -161,13 +161,38 @@ var ICONS={
   faceCalm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01" stroke-width="2.6"/><path d="M9 15.2c.9.9 1.9 1.3 3 1.3s2.1-.4 3-1.3"/></svg>',
   faceWin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6.5 10.5h4l-2 2Z" fill="currentColor" stroke="none"/><path d="M13.5 10.5h4l-2 2Z" fill="currentColor" stroke="none"/><path d="M6.8 10.8 10.2 12M17.2 10.8 13.8 12"/><path d="M9 15.4c.9.9 1.9 1.3 3 1.3s2.1-.4 3-1.3"/></svg>',
   faceDead:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m8.2 8.7 2.2 2.2m0-2.2-2.2 2.2M13.6 8.7l2.2 2.2m0-2.2-2.2 2.2"/><path d="M9 16c.9-.7 1.9-1 3-1s2.1.3 3 1"/></svg>',
-  faceWow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="2.4"/><circle cx="12" cy="16.2" r="1.6"/></svg>'
+  faceWow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="2.4"/><circle cx="12" cy="16.2" r="1.6"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v6a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2 1.5 3.5 4 4M17 6h3a1 1 0 0 1 1 1c0 2-1.5 3.5-4 4"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-3.5 4-5.5 8-5.5s7.2 2 8 5.5"/></svg>'
 };
 document.getElementById('mineIco').innerHTML=ICONS.mine;
 document.getElementById('timeIco').innerHTML=ICONS.clock;
 document.getElementById('flagIco').innerHTML=ICONS.flag;
 document.getElementById('statsBtn').innerHTML=ICONS.chart;
 document.getElementById('helpBtn').innerHTML=ICONS.help;
+els.lbBtn.innerHTML=ICONS.trophy;
+
+var API='https://gameapi.haoaiganfan.top';
+var auth={token:null,user:null};
+try{var saved=JSON.parse(localStorage.getItem('mines.auth')||'null');if(saved&&saved.token){auth.token=saved.token;auth.user=saved.user||null}}catch(e){}
+function saveAuth(){try{localStorage.setItem('mines.auth',JSON.stringify({token:auth.token,user:auth.user}))}catch(e){}}
+function renderUserChip(){
+  var logged=!!auth.token;
+  els.userChip.classList.toggle('logged',logged);
+  els.userChip.innerHTML='<span class="dot"></span>'+ICONS.user+'<span class="uname">'+(logged&&auth.user?auth.user.username:'游客')+'</span>';
+}
+renderUserChip();
+if(auth.token){
+  fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){auth.user=d.user;saveAuth();renderUserChip()}).catch(function(){});
+}
+function api(path,opt){
+  opt=opt||{};
+  opt.headers=Object.assign({'Content-Type':'application/json'},opt.headers||{});
+  if(auth.token)opt.headers.Authorization='Bearer '+auth.token;
+  return fetch(API+path,opt).then(function(r){
+    return r.json().catch(function(){return{}}).then(function(d){if(!r.ok)throw d;return d});
+  });
+}
 document.querySelectorAll('.ghost.x').forEach(function(b){b.innerHTML=ICONS.x});
 
 var audio={ctx:null,on:store.get(LS.sound,true),
@@ -377,6 +402,18 @@ function loadStats(){var s=store.get(LS.stats,null);if(!s){s={};['beginner','int
 function saveStats(s){store.set(LS.stats,s)}
 function statKey(){return S.mode==='daily'?'daily':S.mode}
 function fmtTime(t){var m=(t/60)|0,s=t%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+var CLOUD_MODES={beginner:1,intermediate:1,expert:1,daily:1};
+function submitPlay(){
+  if(!CLOUD_MODES[S.mode])return;
+  if(!auth.token){if(S.win)toast('游客战绩仅存本机 · 登录后可云端上榜');return}
+  api('/plays',{method:'POST',body:JSON.stringify({
+    game:'mines',mode:S.mode,won:S.win,score:S.time*1000,
+    detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}
+  })}).then(function(d){
+    if(S.win&&typeof d.rank==='number')toast('战绩已云端验证 · 当前第 '+d.rank+' 名');
+    else if(S.win)toast('战绩已云端保存');
+  }).catch(function(e){toast('云端提交失败'+(e&&e.error?(' · '+e.error):''))});
+}
 
 function updateFoot(){
   var s=loadStats(),k=statKey(),d=s[k];
@@ -427,6 +464,11 @@ function newGame(cfg){
   S.mine=null;S.num=null;S.state=new Uint8Array(S.rows*S.cols);
   S.openCount=0;S.flags=0;S.started=false;S.over=false;S.win=false;S.firstDone=false;
   S.time=0;S.exploded=-1;S.hintsLeft=3;
+  S.moves=[];
+  var sid='';
+  for(var si=0;si<16;si++)sid+='0123456789abcdef'[Math.random()*16|0];
+  S.seed=S.mode==='daily'?('mines-daily-'+todayKey()):('g:'+sid);
+  S.rng=C.mulberry32(C.hashStr(S.seed));
   S.fxTimers.forEach(clearTimeout);S.fxTimers=[];
   fx.reset();
   els.boardCard.classList.remove('shake','won-glow');
@@ -545,6 +587,7 @@ function floodOpenReal(start){
 
 function openCell(i){
   if(S.over||S.state[i]!==0)return;
+  S.moves.push({t:'o',i:i});
   if(!S.firstDone){
     S.firstDone=true;S.started=true;
     placeMines(i);
@@ -560,6 +603,7 @@ function openCell(i){
 function toggleFlag(i){
   if(S.over)return;
   if(S.state[i]===1)return;
+  S.moves.push({t:'f',i:i});
   if(S.state[i]===2){S.state[i]=0;S.flags--}
   else{S.state[i]=2;S.flags++;audio.flag()}
   renderCell(i);updateHUD();
@@ -570,6 +614,7 @@ function onChord(i){
   var fl=0;
   forN(i,function(j){if(S.state[j]===2)fl++});
   if(fl!==S.num[i])return;
+  S.moves.push({t:'c',i:i});
   var toOpen=[];
   forN(i,function(j){if(S.state[j]===0)toOpen.push(j)});
   for(var k=0;k<toOpen.length;k++){
@@ -625,6 +670,7 @@ function winGame(){
   els.bTime.textContent=fmtTime(S.time);
   els.bRecord.style.display=rec?'':'none';
   els.banner.classList.remove('lose');els.banner.classList.add('show','win');
+  submitPlay();
 }
 
 function lose(explode){
@@ -663,6 +709,7 @@ function lose(explode){
   els.bRecord.style.display='none';
   els.banner.classList.remove('win');
   S.fxTimers.push(setTimeout(function(){if(S.over&&!S.win)els.banner.classList.add('show','lose')},Math.min(maxD+700,2600)));
+  submitPlay();
 }
 
 function hint(){
@@ -812,6 +859,79 @@ els.customModal.querySelectorAll('input').forEach(function(inp){
   inp.addEventListener('keydown',function(e){if(e.key==='Enter')startCustom()});
 });
 els.faceBtn.innerHTML=ICONS.faceCalm+'<span class="fl-label">新局</span>';
+
+var authMode='login';
+function setAuthMode(m){
+  authMode=m;
+  els.tabLogin.classList.toggle('on',m==='login');
+  els.tabReg.classList.toggle('on',m==='reg');
+  els.authGo.textContent=m==='login'?'登 录':'注 册';
+  els.authErr.textContent='';
+}
+els.tabLogin.addEventListener('click',function(){setAuthMode('login')});
+els.tabReg.addEventListener('click',function(){setAuthMode('reg')});
+function doAuth(){
+  var u=els.authUser.value.trim(),p=els.authPass.value;
+  els.authErr.textContent='';
+  if(!u||!p){els.authErr.textContent='请输入用户名和密码';return}
+  els.authGo.disabled=true;
+  api('/auth/'+(authMode==='login'?'login':'register'),{method:'POST',body:JSON.stringify({username:u,password:p})})
+    .then(function(d){
+      auth.token=d.token;auth.user=d.user;saveAuth();renderUserChip();
+      closeModal(els.authModal);
+      toast('欢迎，'+d.user.username+' · 战绩将云端保存');
+    })
+    .catch(function(e){els.authErr.textContent=(e&&e.error)||'网络异常，稍后再试'})
+    .then(function(){els.authGo.disabled=false});
+}
+els.authGo.addEventListener('click',doAuth);
+els.authPass.addEventListener('keydown',function(e){if(e.key==='Enter')doAuth()});
+els.authUser.addEventListener('keydown',function(e){if(e.key==='Enter')els.authPass.focus()});
+els.userChip.addEventListener('click',function(){
+  if(!auth.token){setAuthMode('login');openModal(els.authModal);setTimeout(function(){els.authUser.focus()},80);return}
+  els.acctName.textContent=auth.user?auth.user.username:'';
+  els.acctSince.textContent=auth.user&&auth.user.created_at?('注册于 '+auth.user.created_at.slice(0,10)):'';
+  openModal(els.acctModal);
+});
+els.acctLogout.addEventListener('click',function(){
+  auth.token=null;auth.user=null;saveAuth();renderUserChip();
+  closeModal(els.acctModal);toast('已退出 · 转为游客模式');
+});
+els.acctLb.addEventListener('click',function(){closeModal(els.acctModal);openLb()});
+
+var lbMode='beginner';
+function fmtMs(ms){return fmtTime(Math.round(ms/1000))}
+function openLb(){
+  openModal(els.lbModal);
+  document.querySelectorAll('#lbTabs button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===lbMode)});
+  loadLb();
+}
+function loadLb(){
+  els.lbBody.innerHTML='<div class="lb-empty">加载中…</div>';
+  els.lbMyRow.style.display='none';
+  api('/leaderboard/mines?mode='+lbMode).then(function(d){
+    if(!d.rows.length){els.lbBody.innerHTML='<div class="lb-empty">虚位以待 · 成为第一个上榜的人</div>';return}
+    var html='<table class="lb"><thead><tr><th>#</th><th style="text-align:left">玩家</th><th>最佳用时</th><th>胜场</th><th>最近</th></tr></thead><tbody>';
+    d.rows.forEach(function(r){
+      var meCls=(auth.user&&r.username===auth.user.username)?' class="me"':'';
+      html+='<tr'+meCls+'><td class="rk">'+r.rank+'</td><td class="user">'+esc(r.username)+'</td><td>'+fmtMs(r.best)+'</td><td>'+r.wins+'</td><td style="color:var(--faint)">'+r.lastDay+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    els.lbBody.innerHTML=html;
+    if(d.me){
+      els.lbMyRow.style.display='';
+      els.lbMyRow.textContent='我的名次：第 '+d.me.rank+' 名 · 最佳 '+fmtMs(d.me.best)+' · '+d.me.wins+' 胜';
+    }
+  }).catch(function(){els.lbBody.innerHTML='<div class="lb-empty">加载失败 · 稍后再试</div>'});
+}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+els.lbBtn.addEventListener('click',openLb);
+els.lbTabs.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  lbMode=b.dataset.mode;
+  document.querySelectorAll('#lbTabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+  loadLb();
+});
 
 updateNoGuessUI();
 var lastDiff=store.get(LS.diff,'beginner');
