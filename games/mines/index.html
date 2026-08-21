@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>扫雷 · 无猜典藏版</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg stroke='%23d8b45a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M2 12h20M5 5l14 14M19 5 5 19'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='6' fill='%23d8b45a'/%3E%3Ccircle cx='10' cy='10' r='1.8' fill='%230b0e13'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+<div id="screenFlash"></div>
+
+<div class="wrap">
+  <header class="brand">
+    <div class="overline">Classic · Logically Solvable</div>
+    <div class="title-row">
+      <h1>扫雷</h1>
+      <span class="title-en">Minesweeper</span>
+      <span class="seal">无猜</span>
+    </div>
+    <p class="tagline">每一次翻开 · <b>皆有逻辑可循</b></p>
+  </header>
+
+  <div class="toolbar">
+    <div class="seg" id="seg">
+      <button data-diff="beginner">初级</button>
+      <button data-diff="intermediate">中级</button>
+      <button data-diff="expert">高级</button>
+      <button data-diff="daily">每日</button>
+      <button data-diff="custom">自定义</button>
+    </div>
+    <div class="tools">
+      <div class="switch on" id="noGuessSw" role="switch" aria-checked="true" title="无猜模式：棋盘保证无需猜测即可推理通关"><span class="track"></span><span>无猜</span></div>
+      <button class="btn hint" id="hintBtn">提示<span class="badge" id="hintBadge">3</span></button>
+      <button class="ghost" id="soundBtn" title="音效"></button>
+      <button class="ghost" id="themeBtn" title="主题"></button>
+      <button class="ghost" id="statsBtn" title="战绩"></button>
+      <button class="ghost" id="helpBtn" title="玩法"></button>
+      <button class="btn" id="newBtn">新 局</button>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="tile"><span class="ico" id="mineIco"></span><div><div class="lab">余雷 Mines</div><div class="val" id="mineCount">010</div></div></div>
+    <button class="face" id="faceBtn" title="重新开始 (R)"></button>
+    <div class="tile"><span class="ico" id="timeIco"></span><div><div class="lab">用时 Time</div><div class="val" id="timeVal">00:00</div></div></div>
+    <div class="tile flagtile" id="flagModeTile"><span class="ico" id="flagIco"></span><div><div class="lab">插旗模式</div><div class="val" id="flagModeVal">关</div></div></div>
+  </div>
+
+  <div class="board-card" id="boardCard">
+    <div class="board-cap">
+      <span class="cap-l" id="capL">初级 · 9 × 9 · 10 雷</span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pill" id="noGuessPill">无猜</span>
+        <span class="pill dim" id="dailyPill" style="display:none"></span>
+      </span>
+    </div>
+    <div class="board-scroll"><div id="board"></div></div>
+    <canvas id="fxCanvas"></canvas>
+    <div class="progress"><i id="progBar"></i></div>
+    <div class="toast" id="toast"></div>
+    <div class="banner" id="banner">
+      <div class="card-b">
+        <div class="b-seal" id="bSeal">胜</div>
+        <h2 id="bTitle">完美通关</h2>
+        <div class="b-sub" id="bSub"></div>
+        <div class="b-time" id="bTime"></div>
+        <div><span class="b-record" id="bRecord" style="display:none">新纪录</span></div>
+        <button class="btn" id="bAgain">再 来 一 局</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-stats">
+    <div class="fs"><div class="fs-v" id="fsWin">0%</div><div class="fs-l">胜率</div></div>
+    <div class="fs"><div class="fs-v" id="fsStreak">0</div><div class="fs-l">连胜</div></div>
+    <div class="fs"><div class="fs-v" id="fsBest">—</div><div class="fs-l">本难度最佳</div></div>
+    <div class="fs"><div class="fs-v" id="fsPlayed">0</div><div class="fs-l">总场次</div></div>
+  </div>
+
+  <footer class="site">MINESWEEPER · 无 猜 典 藏 版</footer>
+</div>
+
+<div class="modal" id="statsModal">
+  <div class="sheet">
+    <button class="ghost x" data-close></button>
+    <h3>战 绩</h3>
+    <table class="stats">
+      <thead><tr><th>难度</th><th>最佳时间</th><th>场次</th><th>胜局</th><th>胜率</th><th>连胜</th><th>最佳连胜</th></tr></thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+    <div class="hairline"></div>
+    <div class="stats-note"><button class="btn danger" id="resetStats">清空战绩</button></div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="sheet">
+    <button class="ghost x" data-close></button>
+    <h3>玩 法</h3>
+    <div class="help-sec"><h4>基本操作</h4><p>左键翻开格子；右键（手机长按）插旗；数字表示周围八格的雷数。翻开所有非雷格子即获胜。</p></div>
+    <div class="help-sec"><h4>和弦快开</h4><p>当某数字周围旗数已满，单击该数字即可快速翻开其余邻格。</p></div>
+    <div class="help-sec"><h4>无猜模式</h4><p>开启后，棋盘由内置推理引擎生成——<b style="color:var(--gold)">从第一步到终局，全程无需任何猜测</b>，只凭逻辑必可通关。</p></div>
+    <div class="help-sec"><h4>提示</h4><p>每局 3 次提示。引擎会推演当前局面，指出一处必可确定的格子；若逻辑已尽，会建议一处最稳妥的落点。</p></div>
+    <div class="help-sec"><h4>每日挑战</h4><p>以日期为种子，全世界共享同一张棋盘，难度逐日轮换。完成一次即记入战绩。</p></div>
+    <div class="help-sec"><h4>快捷键</h4><p><kbd>R</kbd> 新局　<kbd>H</kbd> 提示　<kbd>F</kbd> 插旗模式　<kbd>T</kbd> 切换主题</p></div>
+    <div class="help-sec"><h4>数据</h4><p>战绩仅保存在本机浏览器 localStorage，不会上传。</p></div>
+  </div>
+</div>
+
+<div class="modal" id="customModal">
+  <div class="sheet">
+    <button class="ghost x" data-close></button>
+    <h3>自 定 义</h3>
+    <div class="steppers">
+      <div class="step"><label>行 5 – 24</label><input type="number" id="cRows" min="5" max="24" value="12"></div>
+      <div class="step"><label>列 5 – 36</label><input type="number" id="cCols" min="5" max="36" value="18"></div>
+      <div class="step"><label>雷数</label><input type="number" id="cMines" min="1" value="30"></div>
+    </div>
+    <div class="center"><button class="btn" id="customGo">开 始</button></div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

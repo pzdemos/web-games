@@ -10,6 +10,7 @@
 | 2048 | `@wg/game2048` | https://2048.haoaiganfan.top | `/opt/game2048` |
 | 俄罗斯方块 | `@wg/tetris` | https://tetris.haoaiganfan.top | `/var/www/tetris` |
 | 打砖块 | `@wg/brick` | https://brick.haoaiganfan.top | `/var/www/brick` |
+| 扫雷 | `@wg/mines` | https://mines.haoaiganfan.top | `/var/www/mines` |
 
 ## 目录结构
 
@@ -29,7 +30,8 @@
     │   └── vite.config.js
     ├── 2048/
     ├── tetris/
-    └── brick/
+    ├── brick/
+    └── mines/
 ```
 
 ## 开发
