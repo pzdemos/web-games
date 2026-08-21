@@ -921,21 +921,17 @@ els.userChip.addEventListener('click',function(){
   var u=auth.user||{};
   els.acctName.textContent=u.username||'';
   els.acctSince.textContent=(u.email?(u.email+' · '):'')+('注册于 '+(u.created_at||'').slice(0,10));
-  els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">最近活动加载中…</div>';
+  els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">登录状态加载中…</div>';
   openModal(els.acctModal);
   api('/auth/me/recent').then(function(d){
-    if(!d.rows||!d.rows.length){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">暂无登录记录</div>';return}
-    var html='<div style="font-size:10px;letter-spacing:.2em;color:var(--faint);margin-bottom:8px;text-align:center">最 近 登 录</div><table style="width:100%;border-collapse:collapse">';
-    d.rows.forEach(function(r){
-      html+='<tr>'
-        +'<td style="padding:5px 4px;color:'+(r.ok?'var(--muted)':'var(--flag)')+';white-space:nowrap">'+(r.ok?'✓':'✕')+' '+(r.kind==='register'?'注册':'登录')+'</td>'
-        +'<td style="padding:5px 4px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">'+esc(r.ip)+'</td>'
-        +'<td style="padding:5px 4px;font-size:11px;color:var(--faint);white-space:nowrap">'+esc(r.ua)+'</td>'
-        +'<td style="padding:5px 4px;font-size:11px;color:var(--faint);text-align:right">'+r.at+'</td>'
-        +'</tr>';
-    });
-    els.acctRecent.innerHTML=html+'</table>';
-  }).catch(function(){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">加载失败</div>'});
+    var rows=(d.rows||[]).filter(function(r){return r.ok});
+    if(!rows.length){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">暂无登录记录</div>';return}
+    var r=rows[0];
+    els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0">'
+      +'<span style="color:#86d99c">● 在线</span>'
+      +'<span style="color:var(--faint);font-size:11px">　最近登录：'+esc(r.ua)+' · '+r.at+'</span>'
+      +'</div>';
+  }).catch(function(){els.acctRecent.innerHTML=''});
 });
 els.acctLogout.addEventListener('click',function(){
   auth.token=null;auth.user=null;saveAuth();renderUserChip();
