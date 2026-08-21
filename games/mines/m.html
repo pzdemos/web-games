@@ -4,17 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
+<title>扫雷 · 无猜典藏版</title>
 <script>
 (function(){
   try{
-    if(localStorage.getItem('mines.forcePC')==='1')return;
-    if(/m\.html$/.test(location.pathname))return;
+    if(localStorage.getItem('mines.forceM')==='1')return;
+    var fine=matchMedia('(pointer:fine)').matches && innerWidth>768;
+    var mobileUA=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
     var coarse=matchMedia('(pointer:coarse)').matches;
-    if(coarse||/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent))location.replace('m.html');
+    if(fine&&!mobileUA&&!coarse)location.replace('index.html');
   }catch(e){}
 })();
 </script>
-<title>扫雷 · 无猜典藏版</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg stroke='%23d8b45a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M2 12h20M5 5l14 14M19 5 5 19'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='6' fill='%23d8b45a'/%3E%3Ccircle cx='10' cy='10' r='1.8' fill='%230b0e13'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -354,6 +355,60 @@ table.lb td.user{max-width:120px; overflow:hidden; text-overflow:ellipsis; white
   .foot-stats{gap:18px}
 }
 </style>
+
+<style id="mstyle">
+html,body{height:100%}
+body{overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.wrap{max-width:none;min-height:100dvh;display:flex;flex-direction:column;padding:0 0 calc(78px + env(safe-area-inset-bottom));position:relative}
+.m-head{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 6px}
+.m-brand{display:flex;align-items:baseline;gap:10px}
+.m-brand h1{font-size:26px;letter-spacing:.14em}
+.m-seal{width:26px;height:26px;font-size:11px;transform:rotate(6deg) translateY(2px);align-self:center}
+.m-sub{font-size:10px;letter-spacing:.25em;color:var(--faint);text-transform:uppercase}
+.m-status{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 16px 4px}
+.m-stat{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line-soft);border-radius:99px;padding:7px 16px;backdrop-filter:blur(8px)}
+.m-stat-ico svg,.m-stat-ico{width:16px;height:16px;color:var(--gold-dim);display:inline-flex}
+.m-stat-val{font-family:var(--font-mono);font-size:19px;font-weight:600;color:var(--gold-strong);font-variant-numeric:tabular-nums}
+.m-face{width:54px;height:54px}
+.m-face svg{width:26px;height:26px}
+.m-face .fl-label{display:none}
+.m-seg{margin:6px 12px;width:auto;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start}
+.m-seg::-webkit-scrollbar{display:none}
+.m-seg button{padding:8px 16px;font-size:13px;flex:none}
+.board-card{margin:8px auto;border-radius:16px;padding:10px;box-shadow:0 -8px 40px rgba(0,0,0,.2),var(--shadow)}
+.board-cap{padding:0 2px 8px}
+.cap-l{font-size:11px}
+.m-fs{margin:12px 0 6px;gap:12px;justify-content:center}
+.m-fs .fs-v{font-size:16px}
+.m-fs .fs-l{letter-spacing:.14em}
+.m-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card-solid) 88%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--line-soft)}
+.m-nav{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 6px;border-radius:14px;font-size:11px;letter-spacing:.08em;color:var(--muted);position:relative;transition:transform .12s ease,background .2s}
+.m-nav:active{transform:scale(.92);background:rgba(216,180,90,.1)}
+.m-nav-ico{font-size:19px;line-height:1;color:var(--gold-dim);display:flex;align-items:center;justify-content:center;min-height:22px}
+.m-nav-ico svg{width:20px;height:20px}
+.m-nav-hint .badge{position:absolute;top:2px;right:calc(50% - 24px)}
+.flagtile{display:flex !important;cursor:pointer}
+.m-flag-state{font-size:9px;color:var(--faint);line-height:1;margin-top:-2px}
+.flagtile.on .m-flag-state{color:var(--flag)}
+.m-sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card-solid);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1);box-shadow:0 -16px 48px rgba(0,0,0,.4)}
+.m-sheet.open{transform:none}
+.m-sheet-grip{width:40px;height:4px;border-radius:2px;background:var(--line-soft);margin:4px auto 14px}
+.m-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.m-opt{display:flex;flex-direction:column;align-items:center;gap:7px}
+.m-opt>span{font-size:11px;color:var(--muted)}
+.m-opt-btn{width:54px;height:54px;border-radius:16px;border:1px solid var(--line-soft);background:var(--opened)}
+.m-opt-btn svg{width:21px;height:21px}
+.m-row{margin-top:16px;display:flex;justify-content:center}
+.m-row .switch{padding:10px 16px}
+.m-desk{display:block;width:100%;margin-top:14px;padding:11px;border-radius:12px;font-size:13px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--line-soft)}
+.modal{align-items:flex-end;padding:0}
+.modal .sheet{width:100%;max-width:100%;border-radius:22px 22px 0 0;margin:0;animation:mSheetUp .32s cubic-bezier(.2,.9,.3,1) both;max-height:84dvh}
+@keyframes mSheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.banner .card-b{padding:24px 26px}
+.toast{top:12px;font-size:12px}
+.progress{margin:10px 2px 0}
+@media (max-width:640px){ .m-brand h1{font-size:23px} }
+</style>
 </head>
 <body>
 <div id="screenFlash"></div>
@@ -484,42 +539,23 @@ global.MinesCore={mulberry32:mulberry32,hashStr:hashStr,neighborsOf:neighborsOf,
 </script>
 
 <div class="wrap">
-  <header class="brand">
-    <div class="overline">Classic · Logically Solvable</div>
-    <div class="title-row">
-      <h1>扫雷</h1>
-      <span class="title-en">Minesweeper</span>
-      <span class="seal">无猜</span>
-    </div>
-    <p class="tagline">每一次翻开 · <b>皆有逻辑可循</b></p>
+  <header class="m-head">
+    <div class="m-brand"><span class="seal m-seal">无猜</span><h1>扫 雷</h1><span class="m-sub">Minesweeper</span></div>
+    <button class="userchip" id="userChip" title="账号"></button>
   </header>
 
-  <div class="toolbar">
-    <div class="seg" id="seg">
-      <button data-diff="beginner">初级</button>
-      <button data-diff="intermediate">中级</button>
-      <button data-diff="expert">高级</button>
-      <button data-diff="daily">每日</button>
-      <button data-diff="custom">自定义</button>
-    </div>
-    <div class="tools">
-      <div class="switch on" id="noGuessSw" role="switch" aria-checked="true" title="无猜模式：棋盘保证无需猜测即可推理通关"><span class="track"></span><span>无猜</span></div>
-      <button class="btn hint" id="hintBtn">提示<span class="badge" id="hintBadge">3</span></button>
-      <button class="ghost" id="lbBtn" title="排行榜"></button>
-      <button class="ghost" id="soundBtn" title="音效"></button>
-      <button class="ghost" id="themeBtn" title="主题"></button>
-      <button class="ghost" id="statsBtn" title="战绩"></button>
-      <button class="ghost" id="helpBtn" title="玩法"></button>
-      <button class="userchip" id="userChip" title="账号"></button>
-      <button class="btn" id="newBtn">新 局</button>
-    </div>
+  <div class="m-status">
+    <div class="m-stat"><span class="m-stat-ico" id="mineIco"></span><span class="m-stat-val" id="mineCount">010</span></div>
+    <button class="face m-face" id="faceBtn" title="重新开始"></button>
+    <div class="m-stat"><span class="m-stat-ico" id="timeIco"></span><span class="m-stat-val" id="timeVal">00:00</span></div>
   </div>
 
-  <div class="hud">
-    <div class="tile"><span class="ico" id="mineIco"></span><div><div class="lab">余雷 Mines</div><div class="val" id="mineCount">010</div></div></div>
-    <button class="face" id="faceBtn" title="重新开始 (R)"></button>
-    <div class="tile"><span class="ico" id="timeIco"></span><div><div class="lab">用时 Time</div><div class="val" id="timeVal">00:00</div></div></div>
-    <div class="tile flagtile" id="flagModeTile"><span class="ico" id="flagIco"></span><div><div class="lab">插旗模式</div><div class="val" id="flagModeVal">关</div></div></div>
+  <div class="seg m-seg" id="seg">
+    <button data-diff="beginner">初级</button>
+    <button data-diff="intermediate">中级</button>
+    <button data-diff="expert">高级</button>
+    <button data-diff="daily">每日</button>
+    <button data-diff="custom">自定义</button>
   </div>
 
   <div class="board-card" id="boardCard">
@@ -546,14 +582,34 @@ global.MinesCore={mulberry32:mulberry32,hashStr:hashStr,neighborsOf:neighborsOf,
     </div>
   </div>
 
-  <div class="foot-stats">
+  <div class="foot-stats m-fs">
     <div class="fs"><div class="fs-v" id="fsWin">0%</div><div class="fs-l">胜率</div></div>
     <div class="fs"><div class="fs-v" id="fsStreak">0</div><div class="fs-l">连胜</div></div>
-    <div class="fs"><div class="fs-v" id="fsBest">—</div><div class="fs-l">本难度最佳</div></div>
-    <div class="fs"><div class="fs-v" id="fsPlayed">0</div><div class="fs-l">总场次</div></div>
+    <div class="fs"><div class="fs-v" id="fsBest">—</div><div class="fs-l">最佳</div></div>
+    <div class="fs"><div class="fs-v" id="fsPlayed">0</div><div class="fs-l">场次</div></div>
   </div>
 
-  <footer class="site">MINESWEEPER · 无 猜 典 藏 版</footer>
+  <nav class="m-bar">
+    <button class="m-nav" id="newBtn"><span class="m-nav-ico m-i-new">⟳</span><span>新局</span></button>
+    <button class="m-nav m-nav-hint" id="hintBtn"><span class="m-nav-ico m-i-hint">✦</span><span>提示</span><span class="badge" id="hintBadge">3</span></button>
+    <div class="m-nav flagtile" id="flagModeTile"><span class="m-nav-ico m-i-flag" id="flagIco"></span><span>插旗</span><span class="m-flag-state" id="flagModeVal">关</span></div>
+    <button class="m-nav" id="lbBtn"><span class="m-nav-ico m-i-lb"></span><span>排行</span></button>
+    <button class="m-nav" id="moreBtn"><span class="m-nav-ico m-i-more">⋯</span><span>更多</span></button>
+  </nav>
+
+  <div class="m-sheet" id="moreSheet">
+    <div class="m-sheet-grip"></div>
+    <div class="m-grid">
+      <div class="m-opt"><button class="ghost m-opt-btn" id="themeBtn"></button><span>主题</span></div>
+      <div class="m-opt"><button class="ghost m-opt-btn" id="soundBtn"></button><span>音效</span></div>
+      <div class="m-opt"><button class="ghost m-opt-btn" id="statsBtn"></button><span>战绩</span></div>
+      <div class="m-opt"><button class="ghost m-opt-btn" id="helpBtn"></button><span>玩法</span></div>
+    </div>
+    <div class="m-row">
+      <div class="switch on" id="noGuessSw" role="switch" aria-checked="true"><span class="track"></span><span>无猜模式</span></div>
+    </div>
+    <button class="m-desk" id="deskBtn">切换桌面版</button>
+  </div>
 </div>
 
 <div class="modal" id="statsModal">
@@ -1561,6 +1617,22 @@ else{
   }
 }
 window.addEventListener('contextmenu',function(e){if(e.target.closest('#board'))e.preventDefault()});
+})();
+</script>
+
+<script>
+(function(){
+  var sheet=document.getElementById('moreSheet');
+  document.getElementById('moreBtn').addEventListener('click',function(){sheet.classList.toggle('open')});
+  sheet.addEventListener('click',function(e){if(e.target===sheet||e.target.classList.contains('m-sheet-grip'))sheet.classList.remove('open')});
+  ['themeBtn','soundBtn','statsBtn','helpBtn'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b)b.addEventListener('click',function(){setTimeout(function(){sheet.classList.remove('open')},150)});
+  });
+  document.getElementById('deskBtn').addEventListener('click',function(){
+    try{localStorage.setItem('mines.forcePC','1')}catch(e){}
+    location.href='index.html';
+  });
 })();
 </script>
 </body>
