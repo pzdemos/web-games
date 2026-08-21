@@ -141,7 +141,7 @@ function dayIndex(){var d=new Date();return Math.floor((d-new Date(d.getFullYear
 function dailyDiffKey(){return DIFF_KEYS[dayIndex()%3]}
 var S={diff:'beginner',mode:'beginner',rows:9,cols:9,mines:10,mine:null,num:null,state:null,openCount:0,flags:0,started:false,over:false,win:false,firstDone:false,time:0,timer:null,exploded:-1,hintsLeft:3,rng:null,dailyDone:false,fxTimers:[],seed:null,moves:[]};
 var els={};
-['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed','lbBtn','userChip','authModal','authUser','authPass','authErr','authGo','tabLogin','tabReg','authEmail','authCode','sendCodeBtn','emailField','codeField','lbModal','lbTabs','lbBody','lbMyRow','acctModal','acctName','acctSince','acctLb','acctLogout','acctRecent'].forEach(function(id){els[id]=document.getElementById(id)});
+['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed','lbBtn','userChip','authModal','authUser','authPass','authErr','authGo','tabLogin','tabReg','authEmail','authCode','sendCodeBtn','emailField','codeField','lbModal','lbTabs','lbBody','lbMyRow','acctModal','acctName','acctSince','acctLb','acctLogout','acctRecent','acctUpgrade'].forEach(function(id){els[id]=document.getElementById(id)});
 var noGuess=store.get(LS.noguess,true);
 var flagMode=false;
 var cellEls=[];
@@ -174,16 +174,21 @@ els.lbBtn.innerHTML=ICONS.trophy;
 
 var API='https://gameapi.haoaiganfan.top';
 var auth={token:null,user:null};
-try{var saved=JSON.parse(localStorage.getItem('mines.auth')||'null');if(saved&&saved.token){auth.token=saved.token;auth.user=saved.user||null}}catch(e){}
-function saveAuth(){try{localStorage.setItem('mines.auth',JSON.stringify({token:auth.token,user:auth.user}))}catch(e){}}
+try{var saved=JSON.parse(localStorage.getItem('mines.auth')||'null');if(saved&&saved.token){auth.token=saved.token;auth.user=saved.user||null;auth.guest=!!saved.guest}}catch(e){}
+function saveAuth(){try{localStorage.setItem('mines.auth',JSON.stringify({token:auth.token,user:auth.user,guest:!!auth.guest}))}catch(e){}}
 function renderUserChip(){
   var logged=!!auth.token;
   els.userChip.classList.toggle('logged',logged);
   els.userChip.innerHTML='<span class="dot"></span>'+ICONS.user+'<span class="uname">'+(logged&&auth.user?auth.user.username:'游客')+'</span>';
+  els.userChip.title=auth.guest?'游客账号 · 点击设置正式账号':'玩家账号';
 }
 renderUserChip();
 if(auth.token){
   fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){auth.user=d.user;saveAuth();renderUserChip()}).catch(function(){});
+}else{
+  api('/auth/guest',{method:'POST'}).then(function(d){
+    auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();renderUserChip();
+  }).catch(function(){});
 }
 function api(path,opt){
   opt=opt||{};
@@ -405,7 +410,7 @@ function fmtTime(t){var m=(t/60)|0,s=t%60;return String(m).padStart(2,'0')+':'+S
 var CLOUD_MODES={beginner:1,intermediate:1,expert:1,daily:1};
 function submitPlay(){
   if(!CLOUD_MODES[S.mode])return;
-  if(!auth.token){if(S.win)toast('游客战绩仅存本机 · 登录后可云端上榜');return}
+  if(!auth.token)return;
   api('/plays',{method:'POST',body:JSON.stringify({
     game:'mines',mode:S.mode,won:S.win,score:S.time*1000,
     detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}
@@ -865,7 +870,13 @@ function setAuthMode(m){
   authMode=m;
   els.tabLogin.classList.toggle('on',m==='login');
   els.tabReg.classList.toggle('on',m==='reg');
-  els.authGo.textContent=m==='login'?'登 录':'注 册';
+  var isGuest=!!(auth.token&&auth.guest);
+  if(m==='reg'&&isGuest){
+    els.authGo.textContent='升 级 账 号';
+    els.authUser.value=auth.user&&auth.user.username&&!/^游客/.test(auth.user.username)?auth.user.username:'';
+  }else{
+    els.authGo.textContent=m==='login'?'登 录':'注 册';
+  }
   els.authErr.textContent='';
   els.emailField.style.display=m==='reg'?'':'none';
   els.codeField.style.display=m==='reg'?'':'none';
@@ -896,6 +907,7 @@ function doAuth(){
   els.authErr.textContent='';
   if(!u||!p){els.authErr.textContent='请输入用户名和密码';return}
   var body={username:u,password:p};
+  var isGuest=!!(auth.token&&auth.guest);
   if(authMode==='reg'){
     var em=els.authEmail.value.trim(),cd=els.authCode.value.trim();
     if(em){
@@ -904,11 +916,13 @@ function doAuth(){
     }
   }
   els.authGo.disabled=true;
-  api('/auth/'+(authMode==='login'?'login':'register'),{method:'POST',body:JSON.stringify(body)})
+  var path=authMode==='login'?'/auth/login':(isGuest?'/auth/upgrade':'/auth/register');
+  api(path,{method:'POST',body:JSON.stringify(body)})
     .then(function(d){
-      auth.token=d.token;auth.user=d.user;saveAuth();renderUserChip();
+      var wasGuest=isGuest;
+      auth.token=d.token;auth.user=d.user;auth.guest=!!d.guest;saveAuth();renderUserChip();
       closeModal(els.authModal);
-      toast('欢迎，'+d.user.username+' · 战绩将云端保存');
+      toast(wasGuest?'账号升级成功 · 游客战绩已继承':'欢迎，'+d.user.username+' · 战绩将云端保存');
     })
     .catch(function(e){els.authErr.textContent=(e&&e.error)||'网络异常，稍后再试'})
     .then(function(){els.authGo.disabled=false});
@@ -921,21 +935,36 @@ els.userChip.addEventListener('click',function(){
   var u=auth.user||{};
   els.acctName.textContent=u.username||'';
   els.acctSince.textContent=(u.email?(u.email+' · '):'')+('注册于 '+(u.created_at||'').slice(0,10));
-  els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">登录状态加载中…</div>';
+  if(auth.guest){
+    els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0;color:var(--muted)">游客账号 · 战绩已在云端<br><span style="font-size:11px;color:var(--faint)">升级正式账号可自定义名字并继承全部战绩</span></div>';
+    els.acctUpgrade.style.display='';
+  }else{
+    els.acctUpgrade.style.display='none';
+    els.acctLb.style.display='';
+    els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">登录状态加载中…</div>';
+  }
   openModal(els.acctModal);
-  api('/auth/me/recent').then(function(d){
-    var rows=(d.rows||[]).filter(function(r){return r.ok});
-    if(!rows.length){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">暂无登录记录</div>';return}
-    var r=rows[0];
-    els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0">'
-      +'<span style="color:#86d99c">● 在线</span>'
-      +'<span style="color:var(--faint);font-size:11px">　最近登录：'+esc(r.ua)+' · '+r.at+'</span>'
-      +'</div>';
-  }).catch(function(){els.acctRecent.innerHTML=''});
+  if(!auth.guest){
+    api('/auth/me/recent').then(function(d){
+      var rows=(d.rows||[]).filter(function(r){return r.ok});
+      if(!rows.length){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">暂无登录记录</div>';return}
+      var r=rows[0];
+      els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0">'
+        +'<span style="color:#86d99c">● 在线</span>'
+        +'<span style="color:var(--faint);font-size:11px">　最近登录：'+esc(r.ua)+' · '+r.at+'</span>'
+        +'</div>';
+    }).catch(function(){els.acctRecent.innerHTML=''});
+  }
 });
 els.acctLogout.addEventListener('click',function(){
   auth.token=null;auth.user=null;saveAuth();renderUserChip();
   closeModal(els.acctModal);toast('已退出 · 转为游客模式');
+});
+els.acctUpgrade.addEventListener('click',function(){
+  closeModal(els.acctModal);
+  setAuthMode('reg');
+  openModal(els.authModal);
+  setTimeout(function(){els.authUser.focus()},80);
 });
 els.acctLb.addEventListener('click',function(){closeModal(els.acctModal);openLb()});
 
