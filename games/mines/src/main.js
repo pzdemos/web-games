@@ -141,7 +141,7 @@ function dayIndex(){var d=new Date();return Math.floor((d-new Date(d.getFullYear
 function dailyDiffKey(){return DIFF_KEYS[dayIndex()%3]}
 var S={diff:'beginner',mode:'beginner',rows:9,cols:9,mines:10,mine:null,num:null,state:null,openCount:0,flags:0,started:false,over:false,win:false,firstDone:false,time:0,timer:null,exploded:-1,hintsLeft:3,rng:null,dailyDone:false,fxTimers:[],seed:null,moves:[]};
 var els={};
-['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed','lbBtn','userChip','authModal','authUser','authPass','authErr','authGo','tabLogin','tabReg','lbModal','lbTabs','lbBody','lbMyRow','acctModal','acctName','acctSince','acctLb','acctLogout'].forEach(function(id){els[id]=document.getElementById(id)});
+['board','boardCard','capL','noGuessPill','dailyPill','mineCount','timeVal','faceBtn','banner','bSeal','bTitle','bSub','bTime','bRecord','bAgain','toast','progBar','hintBtn','hintBadge','newBtn','noGuessSw','themeBtn','soundBtn','statsBtn','helpBtn','flagModeTile','flagModeVal','seg','statsBody','resetStats','customModal','customGo','cRows','cCols','cMines','fsWin','fsStreak','fsBest','fsPlayed','lbBtn','userChip','authModal','authUser','authPass','authErr','authGo','tabLogin','tabReg','authEmail','authCode','sendCodeBtn','emailField','codeField','lbModal','lbTabs','lbBody','lbMyRow','acctModal','acctName','acctSince','acctLb','acctLogout','acctRecent'].forEach(function(id){els[id]=document.getElementById(id)});
 var noGuess=store.get(LS.noguess,true);
 var flagMode=false;
 var cellEls=[];
@@ -867,15 +867,44 @@ function setAuthMode(m){
   els.tabReg.classList.toggle('on',m==='reg');
   els.authGo.textContent=m==='login'?'登 录':'注 册';
   els.authErr.textContent='';
+  els.emailField.style.display=m==='reg'?'':'none';
+  els.codeField.style.display=m==='reg'?'':'none';
 }
 els.tabLogin.addEventListener('click',function(){setAuthMode('login')});
 els.tabReg.addEventListener('click',function(){setAuthMode('reg')});
+var codeCd=0,cdTimer=null;
+function startCd(){
+  codeCd=60;
+  els.sendCodeBtn.textContent=codeCd+'s';
+  els.sendCodeBtn.disabled=true;
+  cdTimer=setInterval(function(){
+    codeCd--;
+    if(codeCd<=0){clearInterval(cdTimer);els.sendCodeBtn.textContent='发送验证码';els.sendCodeBtn.disabled=false;return}
+    els.sendCodeBtn.textContent=codeCd+'s';
+  },1000);
+}
+els.sendCodeBtn.addEventListener('click',function(){
+  var em=els.authEmail.value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){els.authErr.textContent='请先填写正确的邮箱';return}
+  els.sendCodeBtn.disabled=true;
+  api('/auth/email/code',{method:'POST',body:JSON.stringify({email:em})})
+    .then(function(d){els.authErr.textContent='';toast(d.message||'验证码已发送');startCd()})
+    .catch(function(e){els.authErr.textContent=(e&&e.error)||'发送失败';els.sendCodeBtn.disabled=false});
+});
 function doAuth(){
   var u=els.authUser.value.trim(),p=els.authPass.value;
   els.authErr.textContent='';
   if(!u||!p){els.authErr.textContent='请输入用户名和密码';return}
+  var body={username:u,password:p};
+  if(authMode==='reg'){
+    var em=els.authEmail.value.trim(),cd=els.authCode.value.trim();
+    if(em){
+      if(!/^\d{6}$/.test(cd)){els.authErr.textContent='请输入 6 位邮箱验证码';return}
+      body.email=em;body.code=cd;
+    }
+  }
   els.authGo.disabled=true;
-  api('/auth/'+(authMode==='login'?'login':'register'),{method:'POST',body:JSON.stringify({username:u,password:p})})
+  api('/auth/'+(authMode==='login'?'login':'register'),{method:'POST',body:JSON.stringify(body)})
     .then(function(d){
       auth.token=d.token;auth.user=d.user;saveAuth();renderUserChip();
       closeModal(els.authModal);
@@ -889,9 +918,24 @@ els.authPass.addEventListener('keydown',function(e){if(e.key==='Enter')doAuth()}
 els.authUser.addEventListener('keydown',function(e){if(e.key==='Enter')els.authPass.focus()});
 els.userChip.addEventListener('click',function(){
   if(!auth.token){setAuthMode('login');openModal(els.authModal);setTimeout(function(){els.authUser.focus()},80);return}
-  els.acctName.textContent=auth.user?auth.user.username:'';
-  els.acctSince.textContent=auth.user&&auth.user.created_at?('注册于 '+auth.user.created_at.slice(0,10)):'';
+  var u=auth.user||{};
+  els.acctName.textContent=u.username||'';
+  els.acctSince.textContent=(u.email?(u.email+' · '):'')+('注册于 '+(u.created_at||'').slice(0,10));
+  els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">最近活动加载中…</div>';
   openModal(els.acctModal);
+  api('/auth/me/recent').then(function(d){
+    if(!d.rows||!d.rows.length){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">暂无登录记录</div>';return}
+    var html='<div style="font-size:10px;letter-spacing:.2em;color:var(--faint);margin-bottom:8px;text-align:center">最 近 登 录</div><table style="width:100%;border-collapse:collapse">';
+    d.rows.forEach(function(r){
+      html+='<tr>'
+        +'<td style="padding:5px 4px;color:'+(r.ok?'var(--muted)':'var(--flag)')+';white-space:nowrap">'+(r.ok?'✓':'✕')+' '+(r.kind==='register'?'注册':'登录')+'</td>'
+        +'<td style="padding:5px 4px;font-family:var(--font-mono);font-size:11px;color:var(--muted)">'+esc(r.ip)+'</td>'
+        +'<td style="padding:5px 4px;font-size:11px;color:var(--faint);white-space:nowrap">'+esc(r.ua)+'</td>'
+        +'<td style="padding:5px 4px;font-size:11px;color:var(--faint);text-align:right">'+r.at+'</td>'
+        +'</tr>';
+    });
+    els.acctRecent.innerHTML=html+'</table>';
+  }).catch(function(){els.acctRecent.innerHTML='<div style="text-align:center;color:var(--faint)">加载失败</div>'});
 });
 els.acctLogout.addEventListener('click',function(){
   auth.token=null;auth.user=null;saveAuth();renderUserChip();
