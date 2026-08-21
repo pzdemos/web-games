@@ -317,6 +317,15 @@ table.lb th{font-size:10px; letter-spacing:.16em; color:var(--faint); font-weigh
 table.lb td{padding:8px 6px; border-bottom:1px solid var(--line-soft); font-variant-numeric:tabular-nums; color:var(--text)}
 table.lb tr:last-child td{border-bottom:none}
 table.lb td.rk{color:var(--gold); font-family:var(--font-mono); width:36px}
+td.rk .crown{display:inline-flex; vertical-align:-4px; margin-right:3px}
+td.rk .crown svg{width:15px; height:13px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+td.rk .crown.gold svg{animation:crownGold 2.4s ease-in-out infinite}
+td.rk .crown.silver svg{animation:crownSw 3s ease-in-out infinite}
+td.rk .crown.bronze svg{animation:crownSw 3.6s ease-in-out infinite}
+@keyframes crownGold{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-1.5px) rotate(-4deg)}50%{transform:translateY(0)}75%{transform:translateY(-1.5px) rotate(4deg)}}
+@keyframes crownSw{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
+.crown-1{background:linear-gradient(135deg,rgba(216,180,90,.22),transparent);box-shadow:inset 0 0 0 1px rgba(216,180,90,.35);border-radius:4px}
+.rank-num-1{color:#ecd391 !important;text-shadow:0 0 10px rgba(216,180,90,.5)}
 table.lb tr.me td{background:rgba(216,180,90,.08)}
 table.lb td.user{max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .lb-empty{text-align:center; color:var(--faint); font-size:13px; padding:30px 0; letter-spacing:.1em}

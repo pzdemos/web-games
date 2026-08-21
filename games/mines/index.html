@@ -336,6 +336,15 @@ table.lb th{font-size:10px; letter-spacing:.16em; color:var(--faint); font-weigh
 table.lb td{padding:8px 6px; border-bottom:1px solid var(--line-soft); font-variant-numeric:tabular-nums; color:var(--text)}
 table.lb tr:last-child td{border-bottom:none}
 table.lb td.rk{color:var(--gold); font-family:var(--font-mono); width:36px}
+td.rk .crown{display:inline-flex; vertical-align:-4px; margin-right:3px}
+td.rk .crown svg{width:15px; height:13px; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+td.rk .crown.gold svg{animation:crownGold 2.4s ease-in-out infinite}
+td.rk .crown.silver svg{animation:crownSw 3s ease-in-out infinite}
+td.rk .crown.bronze svg{animation:crownSw 3.6s ease-in-out infinite}
+@keyframes crownGold{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-1.5px) rotate(-4deg)}50%{transform:translateY(0)}75%{transform:translateY(-1.5px) rotate(4deg)}}
+@keyframes crownSw{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
+.crown-1{background:linear-gradient(135deg,rgba(216,180,90,.22),transparent);box-shadow:inset 0 0 0 1px rgba(216,180,90,.35);border-radius:4px}
+.rank-num-1{color:#ecd391 !important;text-shadow:0 0 10px rgba(216,180,90,.5)}
 table.lb tr.me td{background:rgba(216,180,90,.08)}
 table.lb td.user{max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .lb-empty{text-align:center; color:var(--faint); font-size:13px; padding:30px 0; letter-spacing:.1em}
@@ -1523,9 +1532,19 @@ function loadLb(){
   api('/leaderboard/mines?mode='+lbMode).then(function(d){
     if(!d.rows.length){els.lbBody.innerHTML='<div class="lb-empty">虚位以待 · 成为第一个上榜的人</div>';return}
     var html='<table class="lb"><thead><tr><th>#</th><th style="text-align:left">玩家</th><th>最佳用时</th><th>胜场</th><th>最近</th></tr></thead><tbody>';
+    var CROWNS={
+      gold:'<svg viewBox="0 0 24 20"><defs><linearGradient id="gAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#f5c94f"/><stop offset="1" stop-color="#c8871a"/></linearGradient></defs><path d="M2 4.5 6.5 9 12 2l5.5 7L22 4.5 20.2 15a2 2 0 0 1-2 1.7H5.8a2 2 0 0 1-2-1.7L2 4.5Z" fill="url(#gAu)" stroke="#8a5d0d" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="11.6" r="1.5" fill="#8a2f2f" stroke="#6d1f1f" stroke-width=".5"/><circle cx="7.2" cy="11.2" r="1" fill="#5b3f92"/><circle cx="16.8" cy="11.2" r="1" fill="#2f6d5b"/></svg>',
+      silver:'<svg viewBox="0 0 24 20"><defs><linearGradient id="gAg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9d2dd"/><stop offset="1" stop-color="#8d99a8"/></linearGradient></defs><path d="M2 4.5 6.5 9 12 2l5.5 7L22 4.5 20.2 15a2 2 0 0 1-2 1.7H5.8a2 2 0 0 1-2-1.7L2 4.5Z" fill="url(#gAg)" stroke="#5f6b78" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="11.6" r="1.4" fill="#4a5563"/></svg>',
+      bronze:'<svg viewBox="0 0 24 20"><defs><linearGradient id="gCu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0b489"/><stop offset=".5" stop-color="#c1793f"/><stop offset="1" stop-color="#8c4f22"/></linearGradient></defs><path d="M2 4.5 6.5 9 12 2l5.5 7L22 4.5 20.2 15a2 2 0 0 1-2 1.7H5.8a2 2 0 0 1-2-1.7L2 4.5Z" fill="url(#gCu)" stroke="#6b3d18" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="11.6" r="1.4" fill="#5c3a1d"/></svg>'
+    };
     d.rows.forEach(function(r){
       var meCls=(auth.user&&r.username===auth.user.username)?' class="me"':'';
-      html+='<tr'+meCls+'><td class="rk">'+r.rank+'</td><td class="user">'+esc(r.username)+'</td><td>'+fmtMs(r.best)+'</td><td>'+r.wins+'</td><td style="color:var(--faint)">'+r.lastDay+'</td></tr>';
+      var rankHtml;
+      if(r.rank===1)rankHtml='<td class="rk crown-1"><span class="crown gold">'+CROWNS.gold+'</span><span class="rank-num-1">1</span></td>';
+      else if(r.rank===2)rankHtml='<td class="rk"><span class="crown silver">'+CROWNS.silver+'</span>2</td>';
+      else if(r.rank===3)rankHtml='<td class="rk"><span class="crown bronze">'+CROWNS.bronze+'</span>3</td>';
+      else rankHtml='<td class="rk">'+r.rank+'</td>';
+      html+='<tr'+meCls+'>'+rankHtml+'<td class="user">'+esc(r.username)+'</td><td>'+fmtMs(r.best)+'</td><td>'+r.wins+'</td><td style="color:var(--faint)">'+r.lastDay+'</td></tr>';
     });
     html+='</tbody></table>';
     els.lbBody.innerHTML=html;
