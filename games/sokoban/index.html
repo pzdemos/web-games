@@ -115,7 +115,6 @@ canvas#cv { display: block; border-radius: 14px; max-width: calc(100vw - 52px); 
   opacity: 0; pointer-events: none; transition: opacity .45s, transform .45s; transform: scale(1.04);
 }
 .overlay.show { opacity: 1; pointer-events: auto; transform: scale(1); }
-#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
 .win-card {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px;
   background: linear-gradient(165deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
@@ -262,7 +261,6 @@ dialog .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
 </div>
 
 <div class="overlay" id="winOverlay">
-  <canvas id="fx"></canvas>
   <div class="win-card">
     <div class="stars"><span>★</span><span>★</span><span>★</span></div>
     <h2 id="winTitle">完美通关</h2>
@@ -303,6 +301,7 @@ dialog .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
   <div style="text-align:right;margin-top:14px"><button class="btn ripple" id="btnCloseDlg">关闭</button></div>
 </dialog>
 
+<script src="confetti.browser.min.js"></script>
 <script>
 const LEVELS=[{"grid":["#######","#     #","# @$. #","#     #","#######"],"pushes":1,"nboxes":1},{"grid":["#######","#     #","# .$@ #","#     #","#######"],"pushes":1,"nboxes":1},{"grid":["#####","#   #","# @ #","# $ #","# . #","#   #","#####"],"pushes":1,"nboxes":1},{"grid":["#######","#### ##","#     #","#     #","# $.# #","# @   #","#######"],"pushes":1,"nboxes":1},{"grid":["#########","#   #   #","#  # @$.#","#  #   ##","# #   # #","#########"],"pushes":1,"nboxes":1},{"grid":["#########","#   @   #","#       #","# $    ##","# .   # #","#       #","#########"],"pushes":1,"nboxes":1},{"grid":["#####","# . #","# $ #","# . #","# $ #","# @ #","#####"],"pushes":2,"nboxes":2},{"grid":["########","#      #","# .$@$.#","#      #","########"],"pushes":2,"nboxes":2},{"grid":["#######","#  .. #","#  $$ #","#  @  #","#     #","#######"],"pushes":2,"nboxes":2},{"grid":["#######","#     #","# $ $ #","# .@. #","#     #","#######"],"pushes":2,"nboxes":2},{"grid":["##########","#        #","# ###### #","# #    # #","# # $$ # #","# # .. # #","#   @    #","##########"],"pushes":2,"nboxes":2},{"grid":["#########","#       #","#  @    #","# $$.   #","# .  ####","#########"],"pushes":2,"nboxes":2},{"grid":["######","# .  #","# $  #","# @$.#","#   ##","######"],"pushes":2,"nboxes":2},{"grid":["########","## .$  #","#      #","#$   ###","#.    ##","#    # #","#@     #","########"],"pushes":2,"nboxes":2},{"grid":["#######","#  #  #","#  @#.#","#$  #$#","#.    #","#    ##","#######"],"pushes":2,"nboxes":2},{"grid":["#######","## $. #","##    #","#    ##","#   $##","# # . #","## @  #","#######"],"pushes":2,"nboxes":2},{"grid":["######","#    #","# #@ #","# $* #","# .* #","#    #","######"],"pushes":3,"nboxes":3},{"grid":["##########","#  .     #","#  $  # ##","#      # #","# .@     #","# $      #","# $.     #","##########"],"pushes":3,"nboxes":3},{"grid":["##########","##.     @#","# $      #","#       $#","# .$ #  .#","##########"],"pushes":3,"nboxes":3},{"grid":["#######","#   ###","#     #","#   #@#","# $. $#","# $. .#","#######"],"pushes":3,"nboxes":3},{"grid":["#######","#    @#","##    #","#  $  #","#$ . ##","#.  $.#","#######"],"pushes":3,"nboxes":3},{"grid":["########","#  $.$.#","#@  .$ #","#      #","# #    #","########"],"pushes":3,"nboxes":3},{"grid":["######","# .$ #","# .$ #","#@   #","# $.##","#   ##","######"],"pushes":3,"nboxes":3},{"grid":["#######","#. $  #","#.   ##","#$ $###","#@#.# #","#######"],"pushes":4,"nboxes":3},{"grid":["########","# . $  #","#   . ##","#   $@##","#    ###","## $.  #","########"],"pushes":4,"nboxes":3},{"grid":["########","#@  ####","#  ##  #","# $.  $#","# $.   #","##    .#","########"],"pushes":4,"nboxes":3},{"grid":["######","#@ $.#","#$ $ #","#.   #","#$. ##","#.  ##","######"],"pushes":6,"nboxes":4},{"grid":["#######","#    .#","#   $ #","# $@. #","# .  $#","## $. #","#######"],"pushes":6,"nboxes":4},{"grid":["#########","#.$ . $ #","#       #","# $ ##@ #","#    $. #","## .    #","#########"],"pushes":7,"nboxes":4},{"grid":["##########","#     #  #","#  .  . ##","#$#    $ #","#  $@#$. #","#.#     ##","##########"],"pushes":7,"nboxes":4},{"grid":["######","# .  #","#.$ $#","#$ $@#","#.  .#","#    #","######"],"pushes":7,"nboxes":4},{"grid":["##########","#        #","#  ####  #","#  #..#  #","#  #..#  #","#  $$$$  #","#   @    #","##########"],"pushes":8,"nboxes":4},{"grid":["#######","#  @#.#","#.$$  #","# .$  #","#  .$ #","#######"],"pushes":8,"nboxes":4},{"grid":["########","#. $   #","# #  $ #","#. $.  #","#@  $  #","#    .##","########"],"pushes":8,"nboxes":4},{"grid":["##########","## .   . #","# $ ##$ @#","#    $ $ #","# # ##.. #","#  # #   #","##########"],"pushes":9,"nboxes":4},{"grid":["#########","#       #","#   $   #","#  $  $ #","#.  .  @#","# #  $..#","#########"],"pushes":9,"nboxes":4},{"grid":["######","#  . #","# . .#","#.$$@#","#  $.#","# $$ #","##   #","######"],"pushes":11,"nboxes":5},{"grid":["##########","#        #","# $   . ##","#.   @   #","# $  $$# #","#.#. $ . #","##########"],"pushes":11,"nboxes":5},{"grid":["##########","#  .#@   #","## $ $#  #","# #.  #  #","#   $   ##","## ..$   #","##########"],"pushes":9,"nboxes":4},{"grid":["#########","#   .   #","#  $   .#","#.#  #  #","#$# $ @$#","#      .#","#########"],"pushes":9,"nboxes":4},{"grid":["#######","#@ .. #","#  $# #","## $  #","##.$$ #","# #  .#","#######"],"pushes":9,"nboxes":4},{"grid":["########","#. $ # #","# .   ##","# $ .  #","# $ @# #","## $  .#","########"],"pushes":9,"nboxes":4},{"grid":["#########","#.  #  .#","#$ ###$ #","#  @ .  #","# $#  $ #","##    .##","#########"],"pushes":10,"nboxes":4},{"grid":["##########","#  .    @#","#. $  $###","#   $    #","##  ## $.#","#   #  . #","#  #     #","##########"],"pushes":10,"nboxes":4},{"grid":["########","#  .   #","# $ . @#","# . $# #","#      #","#  $ $ #","# .   ##","########"],"pushes":10,"nboxes":4},{"grid":["#########","#  @ .  #","#.  $#  #","#   .$ ##","#. #    #","#$   $  #","#       #","#########"],"pushes":11,"nboxes":4},{"grid":["################","# @   .      ###","##$$#  #.     .#","#     ##$$     #","# $#   #    #  #","##  .. # $# #. #","##  # ##       #","################"],"pushes":34,"nboxes":6},{"grid":["###########################","#        .. $    ##.      #","#     $ #  #   $  @ #     #","####    ##  $   ##   $# $ #","#  # #  #.  #   ###       #","# #  $$ ########## .    $ #","# ...   ##########       .#","###########################"],"pushes":40,"nboxes":9},{"grid":["###########################","# ##   ..##.       .  $   #","#           $     #..  $  #","#        #     #$ #     $ #","# $$ ##  #    # @ #       #","##  #    #   . $  #     # #","##########.       #       #","###########################"],"pushes":41,"nboxes":8},{"grid":["##########################","#   #  ##   $ ..         #","# $ #         $ # $ $    #","# $ #  #   #    #  ##    #","# $ #  # $#     #     @# #","#   ...#  #   .###       #","#################    #. .#","##########################"],"pushes":45,"nboxes":8},{"grid":["##################################","#  $    .       ###@    .    #  .#","#    $   #         .   ## #     ##","#        #  . $$  #$      #     .#","# $ .    # ..$ #  #  #  $ ##$ $  #","#    #   #    #   # $     #   $ ##","#     .  ###########   .  #    . #","##################################"],"pushes":48,"nboxes":12},{"grid":["##################################","#   # ##  #@ #              .    #","#    $ ##     $ # .$ #   # $ $   #","#$  # .  $   #  ###     .# # $  ##","#  # # #  #     #   $    #   #   #","#.     #   #   .#    $ #.#   . . #","#      # #     .# #      # #     #","##################################"],"pushes":49,"nboxes":10},{"grid":["#################################","#   .       #     #    ##  #@   #","#  .  #  $     #  $ #      $    #","##    #        #      . # # $#  #","##$$ ##        # $  .   #       #","#  $# #.. .$ $ #  $  .  #  ##   #","##   .#        ##########   ..  #","#################################"],"pushes":49,"nboxes":11},{"grid":["#########################################","#   @.    .  $         $.      $.##  $ .#","#        #      ###   $  #   #     $   ##","# $     .##     .#     $ # $  $ ## $    #","# #      #    #  #  # #  #       #   .. #","# $  ##  #  $ #$ #     . #    . .########","#        ##     .# .     ################","#########################################"],"pushes":54,"nboxes":14},{"grid":["##########################################","#   #  #   . .$   ##.  .    ..    #    #.#","#   #  @ #   $ $  ## $   # #$   #    .## #","# $  #$. #   ##       $    #   .##  $    #","#     .  #. ##    #.     $ #  $ #   $    #","#    $  .#   #    ############ $# ## # $ #","##########      # ###########   # ##    .#","##########################################"],"pushes":55,"nboxes":15},{"grid":["############################################","#.  .  ## ##   ## . .        #    # ###  ..#","# $    ##        $ $ .# # #$@. # $#   ##   #","## . #    $ $. #   #  ###      #  . .   $$ #","#       ##     # $   ##   .  $ #  #  .#. $ #","#  $ #$ # ##  $#   #  # .  $ # #  #$ $#   ##","# #     #.    .####################   ######","############################################"],"pushes":60,"nboxes":18},{"grid":["#################################################","#  #                     ##..#   ## . .    @  # #","#    #  .#  $     # $  #    $$ $        #   $   #","#       ### $    .#  $ #$ #       #   $.#  #    #","#     # .#      . ## #    #.#     # $   ##$# $  #","# $  $   #     #  #..    .######### # $ #    . .#","#     #  ##########  #    #########     #.    # #","#################################################"],"pushes":64,"nboxes":16}];
 const TIERS = [
@@ -314,8 +313,6 @@ const TIERS = [
   { name: 'Ⅵ · 大师', from: 47, to: LEVELS.length },
 ];
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-const fx = document.getElementById('fx'), fctx = fx.getContext('2d');
-function sizeFx() { fx.width = innerWidth; fx.height = innerHeight; }
 const $ = id => document.getElementById(id);
 let cur = 0, grid, boxes, player, goals, history, moves, pushes, won = false;
 let cell = 32, undoLeft = 0;
@@ -427,40 +424,29 @@ function spawnParticles(px, py, color, n, spread) {
       life: 1, size: 2 + Math.random() * 3, color, g: .12 });
   }
 }
-function confettiBurst() {
-  sizeFx();
-  const W = fx.width, H = fx.height;
-  const colors = ['#ffb454', '#53d8ff', '#4ade9b', '#a78bfa', '#ff6b8a', '#fff'];
-  for (let i = 0; i < 130; i++) {
-    anim.particles.push({
-      x: W / 2 + (Math.random() - .5) * W * .6, y: H * .55,
-      vx: (Math.random() - .5) * 14, vy: -5 - Math.random() * 10,
-      life: 1, size: 3 + Math.random() * 4, color: colors[i % colors.length],
-      g: .16, spin: Math.random() * Math.PI, sq: Math.random() < .5, conf: true
-    });
-  }
+function celebrate() {
+  if (!window.confetti) return;
+  const colors = ['#ffb454', '#53d8ff', '#4ade9b', '#a78bfa', '#ff6b8a', '#ffd166'];
+  const base = { colors, ticks: 230, gravity: .9, decay: .93, disableForReducedMotion: true };
+  confetti({ ...base, particleCount: 80, spread: 65, startVelocity: 48, angle: 62, origin: { x: -.02, y: .78 } });
+  confetti({ ...base, particleCount: 80, spread: 65, startVelocity: 48, angle: 118, origin: { x: 1.02, y: .78 } });
+  setTimeout(() => confetti({ ...base, particleCount: 120, spread: 110, startVelocity: 40, scalar: 1.1, origin: { x: .5, y: .42 } }), 260);
+  setTimeout(() => confetti({ ...base, particleCount: 60, spread: 130, startVelocity: 30, scalar: .75, origin: { x: .5, y: .55 } }), 560);
 }
 function stepParticles() {
   for (let i = anim.particles.length - 1; i >= 0; i--) {
     const p = anim.particles[i];
     p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= .99; p.life -= .012;
-    if (p.conf && p.sq) p.spin += .15;
-    if (p.life <= 0 || p.y > (p.conf ? fx.height : cv.height) + 20) anim.particles.splice(i, 1);
+    if (p.life <= 0 || p.y > cv.height + 20) anim.particles.splice(i, 1);
   }
 }
 function drawParticles() {
   for (const p of anim.particles) {
-    const c = p.conf ? fctx : ctx;
-    c.globalAlpha = Math.max(0, p.life);
-    c.fillStyle = p.color;
-    if (p.conf && p.sq) {
-      c.save(); c.translate(p.x, p.y); c.rotate(p.spin);
-      c.fillRect(-p.size, -p.size * .55, p.size * 2, p.size * 1.1); c.restore();
-    } else {
-      c.beginPath(); c.arc(p.x, p.y, p.size * p.life, 0, 7); c.fill();
-    }
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, 7); ctx.fill();
   }
-  ctx.globalAlpha = 1; fctx.globalAlpha = 1;
+  ctx.globalAlpha = 1;
 }
 
 /* ============ level ============ */
@@ -486,7 +472,6 @@ function loadLevel(i, animateIn) {
   for (const b of boxes) boxAnim(b);
   if (animateIn) for (const a of anim.boxes.values()) { a.spawn = 0; }
   $('winOverlay').classList.remove('show');
-  fctx.clearRect(0, 0, fx.width, fx.height);
   $('lvBadge').textContent = `关卡 ${cur + 1} / ${LEVELS.length}`;
   setStat('stPar', lv.pushes); $('stBest').querySelector('b').textContent = store.best[cur + 1] ?? '—';
   setStat('stMoves', 0); setStat('stPushes', 0);
@@ -555,7 +540,6 @@ function undo() {
   sfx.undo();
   setStat('stMoves', moves); setStat('stPushes', pushes);
   $('winOverlay').classList.remove('show'); won = false;
-  fctx.clearRect(0, 0, fx.width, fx.height);
 }
 
 function win() {
@@ -574,7 +558,7 @@ function win() {
   $('btnNext').style.display = hasNext ? '' : 'none';
   $('btnReplay').style.display = hasNext ? 'none' : '';
   $('winOverlay').classList.add('show');
-  confettiBurst(); sfx.win();
+  celebrate(); sfx.win();
   anim.shake = 4;
 }
 
