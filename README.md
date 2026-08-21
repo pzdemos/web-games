@@ -11,6 +11,15 @@
 | 俄罗斯方块 | `@wg/tetris` | https://tetris.haoaiganfan.top | `/var/www/tetris` |
 | 打砖块 | `@wg/brick` | https://brick.haoaiganfan.top | `/var/www/brick` |
 | 扫雷 | `@wg/mines` | https://mines.haoaiganfan.top | `/var/www/mines` |
+| 推箱子 | —（单文件 + Python 服务） | https://sokoban.haoaiganfan.top | `/opt/sokoban` |
+| 游戏厅门户 | —（单文件静态页） | https://games.haoaiganfan.top | `/var/www/games` |
+
+> 新游戏一律登记到游戏厅门户（`games/portal/index.html` 的 GAMES 数组），不再逐个写入 panel。
+
+## 非工程化成员
+
+- **`games/sokoban/`** — 推箱子：`index.html`（游戏本体，内嵌 57 关）+ `server.py`（stdlib 静态+进度 API，systemd `sokoban.service`，端口 2050）+ `pipeline/`（关卡生成管线：设计/随机生成/A* 求解验证/房间组合，产物已嵌入 index.html）
+- **`games/portal/`** — 游戏厅门户单文件源码
 
 ## 目录结构
 
@@ -31,7 +40,9 @@
     ├── 2048/
     ├── tetris/
     ├── brick/
-    └── mines/
+    ├── mines/
+    ├── sokoban/              # 推箱子（非 Vite：单文件游戏 + server.py + pipeline/ 关卡生成）
+    └── portal/               # 游戏厅门户（单文件静态页）
 ```
 
 ## 开发
