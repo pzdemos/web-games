@@ -33,7 +33,7 @@
     <div class="tools">
       <div class="switch on" id="noGuessSw" role="switch" aria-checked="true" title="无猜模式：棋盘保证无需猜测即可推理通关"><span class="track"></span><span>无猜</span></div>
       <button class="btn hint" id="hintBtn">提示<span class="badge" id="hintBadge">3</span></button>
-      <button class="ghost" id="lbBtn" title="云端排行榜"></button>
+      <button class="ghost" id="lbBtn" title="排行榜"></button>
       <button class="ghost" id="soundBtn" title="音效"></button>
       <button class="ghost" id="themeBtn" title="主题"></button>
       <button class="ghost" id="statsBtn" title="战绩"></button>
@@ -107,8 +107,8 @@
     <div class="help-sec"><h4>提示</h4><p>每局 3 次提示。引擎会推演当前局面，指出一处必可确定的格子；若逻辑已尽，会建议一处最稳妥的落点。</p></div>
     <div class="help-sec"><h4>每日挑战</h4><p>以日期为种子，全世界共享同一张棋盘，难度逐日轮换。完成一次即记入战绩。</p></div>
     <div class="help-sec"><h4>快捷键</h4><p><kbd>R</kbd> 新局　<kbd>H</kbd> 提示　<kbd>F</kbd> 插旗模式　<kbd>T</kbd> 切换主题</p></div>
-    <div class="help-sec"><h4>账号与排行榜</h4><p>游客可完整游玩，战绩仅存本机。注册/登录后（全站游戏共用一个账号），对局自动上云：<b style="color:var(--gold)">服务端会用同一种子重放验证整局走子</b>，杜绝伪造成绩；通过验证的成绩进入云端排行榜。</p></div>
-    <div class="help-sec"><h4>数据</h4><p>本机战绩保存在浏览器 localStorage；云端战绩保存在服务器数据库，均可随时清除。</p></div>
+    <div class="help-sec"><h4>账号与排行榜</h4><p>进入游戏即自动获得游客账号，可直接上榜。升级/登录正式账号后（全站游戏共用一个账号）可自定义名字。<b style="color:var(--gold)">排行榜成绩经服务端同种子重放验证</b>，杜绝伪造成绩。</p></div>
+    <div class="help-sec"><h4>数据</h4><p>战绩与账号信息保存在服务器，本机偏好存于浏览器 localStorage。</p></div>
   </div>
 </div>
 
@@ -145,7 +145,7 @@
     <div class="field"><div class="err" id="authErr"></div></div>
     <div class="center"><button class="btn" id="authGo">登 录</button></div>
     <div class="hairline"></div>
-    <p style="font-size:12px;color:var(--faint);text-align:center;letter-spacing:.06em">全站游戏共用一个账号 · 战绩云端保存 · 排行榜服务端重放验证防作弊</p>
+    <p style="font-size:12px;color:var(--faint);text-align:center;letter-spacing:.06em">全站游戏共用一个账号 · 排行榜服务端重放验证防作弊</p>
   </div>
 </div>
 

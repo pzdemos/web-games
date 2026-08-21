@@ -415,9 +415,9 @@ function submitPlay(){
     game:'mines',mode:S.mode,won:S.win,score:S.time*1000,
     detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}
   })}).then(function(d){
-    if(S.win&&typeof d.rank==='number')toast('战绩已云端验证 · 当前第 '+d.rank+' 名');
-    else if(S.win)toast('战绩已云端保存');
-  }).catch(function(e){toast('云端提交失败'+(e&&e.error?(' · '+e.error):''))});
+    if(S.win&&typeof d.rank==='number')toast('战绩已验证 · 当前第 '+d.rank+' 名');
+    else if(S.win)toast('战绩已记录');
+  }).catch(function(e){toast('战绩提交失败'+(e&&e.error?(' · '+e.error):''))});
 }
 
 function updateFoot(){
@@ -922,7 +922,7 @@ function doAuth(){
       var wasGuest=isGuest;
       auth.token=d.token;auth.user=d.user;auth.guest=!!d.guest;saveAuth();renderUserChip();
       closeModal(els.authModal);
-      toast(wasGuest?'账号升级成功 · 游客战绩已继承':'欢迎，'+d.user.username+' · 战绩将云端保存');
+      toast(wasGuest?'账号升级成功 · 战绩已继承':'欢迎，'+d.user.username);
     })
     .catch(function(e){els.authErr.textContent=(e&&e.error)||'网络异常，稍后再试'})
     .then(function(){els.authGo.disabled=false});
@@ -936,7 +936,7 @@ els.userChip.addEventListener('click',function(){
   els.acctName.textContent=u.username||'';
   els.acctSince.textContent=(u.email?(u.email+' · '):'')+('注册于 '+(u.created_at||'').slice(0,10));
   if(auth.guest){
-    els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0;color:var(--muted)">游客账号 · 战绩已在云端<br><span style="font-size:11px;color:var(--faint)">升级正式账号可自定义名字并继承全部战绩</span></div>';
+    els.acctRecent.innerHTML='<div style="text-align:center;padding:4px 0;color:var(--muted)">游客账号<br><span style="font-size:11px;color:var(--faint)">升级正式账号可自定义名字并继承战绩</span></div>';
     els.acctUpgrade.style.display='';
   }else{
     els.acctUpgrade.style.display='none';
