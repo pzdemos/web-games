@@ -145,10 +145,12 @@ canvas#cv { display: block; border-radius: 14px; max-width: calc(100vw - 52px); 
 .controls { display: flex; gap: 10px; padding: 12px 10px 4px; flex-wrap: wrap; justify-content: center; }
 .btn {
   position: relative; overflow: hidden; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   background: var(--glass); border: 1px solid var(--stroke); color: var(--text);
   border-radius: 14px; padding: 11px 18px; font-size: 14px; font-weight: 600;
   backdrop-filter: blur(14px); transition: transform .18s cubic-bezier(.34,1.56,.64,1), border-color .25s, box-shadow .25s, background .25s;
 }
+.btn svg { width: 15px; height: 15px; flex: none; }
 .btn:hover { border-color: var(--stroke2); background: var(--glass2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.35); }
 .btn:active { transform: translateY(0) scale(.96); }
 .btn .kbd { font-size: 10px; color: var(--dim); margin-left: 6px; border: 1px solid var(--stroke); border-radius: 5px; padding: 1px 5px; }
@@ -270,18 +272,18 @@ dialog .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
     </div>
     <p id="winNote"></p>
     <div class="win-btns">
-      <button class="btn ripple" id="btnReplay">↻ 重玩本关</button>
-      <button class="btn primary" id="btnNext">下一关 →</button>
+      <button class="btn ripple" id="btnReplay"><i data-lucide="rotate-ccw"></i>重玩本关</button>
+      <button class="btn primary" id="btnNext">下一关<i data-lucide="chevron-right"></i></button>
     </div>
   </div>
 </div>
 
 <div class="controls">
-  <button class="btn ripple" id="btnUndo">↶ 撤销<span class="kbd">U</span></button>
-  <button class="btn ripple" id="btnRestart">↻ 重来<span class="kbd">R</span></button>
-  <button class="btn ripple" id="btnPrev">← 上一关</button>
-  <button class="btn ripple" id="btnLevels">☰ 选关</button>
-  <button class="btn ripple" id="btnMute">🔊 音效</button>
+  <button class="btn ripple" id="btnUndo"><i data-lucide="undo-2"></i>撤销<span class="kbd">U</span></button>
+  <button class="btn ripple" id="btnRestart"><i data-lucide="rotate-ccw"></i>重来<span class="kbd">R</span></button>
+  <button class="btn ripple" id="btnPrev"><i data-lucide="chevron-left"></i>上一关</button>
+  <button class="btn ripple" id="btnLevels"><i data-lucide="layout-grid"></i>选关</button>
+  <button class="btn ripple" id="btnMute"><i data-lucide="volume-2" data-sk-icon="on"></i><i data-lucide="volume-x" data-sk-icon="off" style="display:none"></i>音效</button>
 </div>
 
 <div class="dpad">
@@ -301,7 +303,8 @@ dialog .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
   <div style="text-align:right;margin-top:14px"><button class="btn ripple" id="btnCloseDlg">关闭</button></div>
 </dialog>
 
-<script src="confetti.browser.min.js"></script>
+<script src="https://libs.haoaiganfan.top/canvas-confetti@1.9.3/confetti.browser.min.js"></script>
+<script src="https://libs.haoaiganfan.top/lucide@1.33.0/lucide.min.js"></script>
 <script>
 const LEVELS=[{"grid":["#######","#     #","# @$. #","#     #","#######"],"pushes":1,"nboxes":1},{"grid":["#######","#     #","# .$@ #","#     #","#######"],"pushes":1,"nboxes":1},{"grid":["#####","#   #","# @ #","# $ #","# . #","#   #","#####"],"pushes":1,"nboxes":1},{"grid":["#######","#### ##","#     #","#     #","# $.# #","# @   #","#######"],"pushes":1,"nboxes":1},{"grid":["#########","#   #   #","#  # @$.#","#  #   ##","# #   # #","#########"],"pushes":1,"nboxes":1},{"grid":["#########","#   @   #","#       #","# $    ##","# .   # #","#       #","#########"],"pushes":1,"nboxes":1},{"grid":["#####","# . #","# $ #","# . #","# $ #","# @ #","#####"],"pushes":2,"nboxes":2},{"grid":["########","#      #","# .$@$.#","#      #","########"],"pushes":2,"nboxes":2},{"grid":["#######","#  .. #","#  $$ #","#  @  #","#     #","#######"],"pushes":2,"nboxes":2},{"grid":["#######","#     #","# $ $ #","# .@. #","#     #","#######"],"pushes":2,"nboxes":2},{"grid":["##########","#        #","# ###### #","# #    # #","# # $$ # #","# # .. # #","#   @    #","##########"],"pushes":2,"nboxes":2},{"grid":["#########","#       #","#  @    #","# $$.   #","# .  ####","#########"],"pushes":2,"nboxes":2},{"grid":["######","# .  #","# $  #","# @$.#","#   ##","######"],"pushes":2,"nboxes":2},{"grid":["########","## .$  #","#      #","#$   ###","#.    ##","#    # #","#@     #","########"],"pushes":2,"nboxes":2},{"grid":["#######","#  #  #","#  @#.#","#$  #$#","#.    #","#    ##","#######"],"pushes":2,"nboxes":2},{"grid":["#######","## $. #","##    #","#    ##","#   $##","# # . #","## @  #","#######"],"pushes":2,"nboxes":2},{"grid":["######","#    #","# #@ #","# $* #","# .* #","#    #","######"],"pushes":3,"nboxes":3},{"grid":["##########","#  .     #","#  $  # ##","#      # #","# .@     #","# $      #","# $.     #","##########"],"pushes":3,"nboxes":3},{"grid":["##########","##.     @#","# $      #","#       $#","# .$ #  .#","##########"],"pushes":3,"nboxes":3},{"grid":["#######","#   ###","#     #","#   #@#","# $. $#","# $. .#","#######"],"pushes":3,"nboxes":3},{"grid":["#######","#    @#","##    #","#  $  #","#$ . ##","#.  $.#","#######"],"pushes":3,"nboxes":3},{"grid":["########","#  $.$.#","#@  .$ #","#      #","# #    #","########"],"pushes":3,"nboxes":3},{"grid":["######","# .$ #","# .$ #","#@   #","# $.##","#   ##","######"],"pushes":3,"nboxes":3},{"grid":["#######","#. $  #","#.   ##","#$ $###","#@#.# #","#######"],"pushes":4,"nboxes":3},{"grid":["########","# . $  #","#   . ##","#   $@##","#    ###","## $.  #","########"],"pushes":4,"nboxes":3},{"grid":["########","#@  ####","#  ##  #","# $.  $#","# $.   #","##    .#","########"],"pushes":4,"nboxes":3},{"grid":["######","#@ $.#","#$ $ #","#.   #","#$. ##","#.  ##","######"],"pushes":6,"nboxes":4},{"grid":["#######","#    .#","#   $ #","# $@. #","# .  $#","## $. #","#######"],"pushes":6,"nboxes":4},{"grid":["#########","#.$ . $ #","#       #","# $ ##@ #","#    $. #","## .    #","#########"],"pushes":7,"nboxes":4},{"grid":["##########","#     #  #","#  .  . ##","#$#    $ #","#  $@#$. #","#.#     ##","##########"],"pushes":7,"nboxes":4},{"grid":["######","# .  #","#.$ $#","#$ $@#","#.  .#","#    #","######"],"pushes":7,"nboxes":4},{"grid":["##########","#        #","#  ####  #","#  #..#  #","#  #..#  #","#  $$$$  #","#   @    #","##########"],"pushes":8,"nboxes":4},{"grid":["#######","#  @#.#","#.$$  #","# .$  #","#  .$ #","#######"],"pushes":8,"nboxes":4},{"grid":["########","#. $   #","# #  $ #","#. $.  #","#@  $  #","#    .##","########"],"pushes":8,"nboxes":4},{"grid":["##########","## .   . #","# $ ##$ @#","#    $ $ #","# # ##.. #","#  # #   #","##########"],"pushes":9,"nboxes":4},{"grid":["#########","#       #","#   $   #","#  $  $ #","#.  .  @#","# #  $..#","#########"],"pushes":9,"nboxes":4},{"grid":["######","#  . #","# . .#","#.$$@#","#  $.#","# $$ #","##   #","######"],"pushes":11,"nboxes":5},{"grid":["##########","#        #","# $   . ##","#.   @   #","# $  $$# #","#.#. $ . #","##########"],"pushes":11,"nboxes":5},{"grid":["##########","#  .#@   #","## $ $#  #","# #.  #  #","#   $   ##","## ..$   #","##########"],"pushes":9,"nboxes":4},{"grid":["#########","#   .   #","#  $   .#","#.#  #  #","#$# $ @$#","#      .#","#########"],"pushes":9,"nboxes":4},{"grid":["#######","#@ .. #","#  $# #","## $  #","##.$$ #","# #  .#","#######"],"pushes":9,"nboxes":4},{"grid":["########","#. $ # #","# .   ##","# $ .  #","# $ @# #","## $  .#","########"],"pushes":9,"nboxes":4},{"grid":["#########","#.  #  .#","#$ ###$ #","#  @ .  #","# $#  $ #","##    .##","#########"],"pushes":10,"nboxes":4},{"grid":["##########","#  .    @#","#. $  $###","#   $    #","##  ## $.#","#   #  . #","#  #     #","##########"],"pushes":10,"nboxes":4},{"grid":["########","#  .   #","# $ . @#","# . $# #","#      #","#  $ $ #","# .   ##","########"],"pushes":10,"nboxes":4},{"grid":["#########","#  @ .  #","#.  $#  #","#   .$ ##","#. #    #","#$   $  #","#       #","#########"],"pushes":11,"nboxes":4},{"grid":["################","# @   .      ###","##$$#  #.     .#","#     ##$$     #","# $#   #    #  #","##  .. # $# #. #","##  # ##       #","################"],"pushes":34,"nboxes":6},{"grid":["###########################","#        .. $    ##.      #","#     $ #  #   $  @ #     #","####    ##  $   ##   $# $ #","#  # #  #.  #   ###       #","# #  $$ ########## .    $ #","# ...   ##########       .#","###########################"],"pushes":40,"nboxes":9},{"grid":["###########################","# ##   ..##.       .  $   #","#           $     #..  $  #","#        #     #$ #     $ #","# $$ ##  #    # @ #       #","##  #    #   . $  #     # #","##########.       #       #","###########################"],"pushes":41,"nboxes":8},{"grid":["##########################","#   #  ##   $ ..         #","# $ #         $ # $ $    #","# $ #  #   #    #  ##    #","# $ #  # $#     #     @# #","#   ...#  #   .###       #","#################    #. .#","##########################"],"pushes":45,"nboxes":8},{"grid":["##################################","#  $    .       ###@    .    #  .#","#    $   #         .   ## #     ##","#        #  . $$  #$      #     .#","# $ .    # ..$ #  #  #  $ ##$ $  #","#    #   #    #   # $     #   $ ##","#     .  ###########   .  #    . #","##################################"],"pushes":48,"nboxes":12},{"grid":["##################################","#   # ##  #@ #              .    #","#    $ ##     $ # .$ #   # $ $   #","#$  # .  $   #  ###     .# # $  ##","#  # # #  #     #   $    #   #   #","#.     #   #   .#    $ #.#   . . #","#      # #     .# #      # #     #","##################################"],"pushes":49,"nboxes":10},{"grid":["#################################","#   .       #     #    ##  #@   #","#  .  #  $     #  $ #      $    #","##    #        #      . # # $#  #","##$$ ##        # $  .   #       #","#  $# #.. .$ $ #  $  .  #  ##   #","##   .#        ##########   ..  #","#################################"],"pushes":49,"nboxes":11},{"grid":["#########################################","#   @.    .  $         $.      $.##  $ .#","#        #      ###   $  #   #     $   ##","# $     .##     .#     $ # $  $ ## $    #","# #      #    #  #  # #  #       #   .. #","# $  ##  #  $ #$ #     . #    . .########","#        ##     .# .     ################","#########################################"],"pushes":54,"nboxes":14},{"grid":["##########################################","#   #  #   . .$   ##.  .    ..    #    #.#","#   #  @ #   $ $  ## $   # #$   #    .## #","# $  #$. #   ##       $    #   .##  $    #","#     .  #. ##    #.     $ #  $ #   $    #","#    $  .#   #    ############ $# ## # $ #","##########      # ###########   # ##    .#","##########################################"],"pushes":55,"nboxes":15},{"grid":["############################################","#.  .  ## ##   ## . .        #    # ###  ..#","# $    ##        $ $ .# # #$@. # $#   ##   #","## . #    $ $. #   #  ###      #  . .   $$ #","#       ##     # $   ##   .  $ #  #  .#. $ #","#  $ #$ # ##  $#   #  # .  $ # #  #$ $#   ##","# #     #.    .####################   ######","############################################"],"pushes":60,"nboxes":18},{"grid":["#################################################","#  #                     ##..#   ## . .    @  # #","#    #  .#  $     # $  #    $$ $        #   $   #","#       ### $    .#  $ #$ #       #   $.#  #    #","#     # .#      . ## #    #.#     # $   ##$# $  #","# $  $   #     #  #..    .######### # $ #    . .#","#     #  ##########  #    #########     #.    # #","#################################################"],"pushes":64,"nboxes":16}];
 const TIERS = [
@@ -403,7 +406,11 @@ const sfx = {
   win:   () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 110)),
   deny:  () => tone(110, .08, 'square', .05, 90),
 };
-function updateMuteBtn() { $('btnMute').innerHTML = (muted ? '🔇' : '🔊') + ' 音效'; }
+function updateMuteBtn() {
+  const b = $('btnMute');
+  b.querySelector('[data-sk-icon="on"]').style.display = muted ? 'none' : '';
+  b.querySelector('[data-sk-icon="off"]').style.display = muted ? '' : 'none';
+}
 $('btnMute').onclick = () => { muted = !muted; localStorage.setItem('sk_mute', muted ? '1' : '0'); updateMuteBtn(); if (!muted) sfx.move(); };
 updateMuteBtn();
 
@@ -776,6 +783,7 @@ $('btnLevels').onclick = () => { buildDialog(); $('lvDialog').showModal(); };
 $('btnCloseDlg').onclick = () => $('lvDialog').close();
 
 loadLevel(Math.min(store.unlocked, LEVELS.length), true);
+if (window.lucide) lucide.createIcons();
 </script>
 </body>
 </html>
