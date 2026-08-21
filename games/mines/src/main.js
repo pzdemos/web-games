@@ -184,7 +184,7 @@ function renderUserChip(){
 }
 renderUserChip();
 if(auth.token){
-  fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){auth.user=d.user;saveAuth();renderUserChip()}).catch(function(){});
+  fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){auth.user=d.user;auth.guest=!!d.user.is_guest;saveAuth();renderUserChip()}).catch(function(){});
 }else{
   api('/auth/guest',{method:'POST'}).then(function(d){
     auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();renderUserChip();
@@ -873,7 +873,7 @@ function setAuthMode(m){
   var isGuest=!!(auth.token&&auth.guest);
   if(m==='reg'&&isGuest){
     els.authGo.textContent='升 级 账 号';
-    els.authUser.value=auth.user&&auth.user.username&&!/^游客/.test(auth.user.username)?auth.user.username:'';
+    els.authUser.value='';
   }else{
     els.authGo.textContent=m==='login'?'登 录':'注 册';
   }
