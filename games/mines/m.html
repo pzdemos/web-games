@@ -141,6 +141,9 @@ html[data-theme="light"] .cell.mine-show{background:#e8cfc6}
 .tab.on{color:var(--gold-strong)}
 .tab.on svg{filter:drop-shadow(0 0 6px rgba(216,180,90,.5))}
 .pad-bottom{height:calc(74px + env(safe-area-inset-bottom))}
+.site-foot{text-align:center;font-size:10px;color:var(--faint);letter-spacing:.18em;padding:2px 0 8px}
+.site-foot a{color:var(--gold-dim);text-decoration:none}
+.site-foot a:active{color:var(--gold-strong)}
 
 /* ── 通用底部抽屉 ── */
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:160;background:var(--card-solid);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:8px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.9,.3,1);max-height:86dvh;overflow-y:auto;box-shadow:0 -16px 48px rgba(0,0,0,.4)}
@@ -390,6 +393,7 @@ global.MinesCore={mulberry32:mulberry32,hashStr:hashStr,neighborsOf:neighborsOf,
     <div><b id="mBest">—</b><span>最佳</span></div>
     <div><b id="mPlayed">0</b><span>场次</span></div>
   </div>
+  <footer class="site-foot"><a href="https://www.haoaiganfan.top" target="_blank" rel="noopener">zhaojiu 出品</a> · 无猜典藏版</footer>
   <div class="pad-bottom"></div>
 </div>
 
