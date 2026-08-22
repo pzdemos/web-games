@@ -24,6 +24,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
 
+  games/mines:
+    dependencies:
+      '@wg/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+
   games/snake:
     dependencies:
       '@wg/ui':
