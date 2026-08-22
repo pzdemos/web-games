@@ -212,7 +212,8 @@
     return out;
   }
   function parseMoves(str) {
-    if (typeof str !== 'string' || !str || str.length > 100000) return null;
+    if (typeof str !== 'string' || str.length > 100000) return null;
+    if (str === '') return []; // 空操作流 = 玩家零输入自然终局，合法
     const parts = str.split(';');
     if (parts.length > MAX_TICK) return null;
     const out = [];

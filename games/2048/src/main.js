@@ -56,7 +56,7 @@ mountBrand();
   }
   function fontFor(v){return Math.round(tileSize*(v<100?.44:v<1000?.37:v<10000?.3:.24));}
 
-  let G,dirs,startTs,best=+localStorage.getItem('best2048')||0,tileSize,gap,pad,won;
+  let G,dirs,startTs,best=+localStorage.getItem('best2048')||0,cells,tileSize,gap,pad,won;
   let tileEls=new Map(),animating=false,pendingNew=null,resolveTimer=null,submitted=false;
   bestEl.textContent=best;
 
@@ -181,7 +181,9 @@ mountBrand();
       else place(tileEls.get(a.srcId),a.r,a.c);
     }
     pendingNew=r.spawn;
-    resolveTimer=setTimeout(()=>{resolveAnims(anims);draw(r.gained);checkEnd(r);},SLIDE_MS);
+    resolveTimer=setTimeout(()=>resolveAnims(anims),SLIDE_MS);
+    draw(r.gained);
+    checkEnd(r);
   }
 
   function submitPlay(){

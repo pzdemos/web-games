@@ -160,7 +160,8 @@
     return out;
   }
   function parseMoves(str) {
-    if (typeof str !== 'string' || !str || str.length > 200000) return null;
+    if (typeof str !== 'string' || str.length > 200000) return null;
+    if (str === '') return []; // 空操作流 = 纯重力终局，合法
     const parts = str.split(';');
     if (parts.length > MAX_EVENTS) return null;
     const out = [];
