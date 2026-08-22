@@ -1,11 +1,17 @@
-import {
-  COLS, ROWS, SPEEDS, DEF_SPEED, T,
-  MULTI_THRESHOLD, BASE_SCORE, COLLAPSE_SCORE,
-  GOLD_SCORE, GOLD_LIFETIME, GOLD_INTERVAL, GOLD_SLOW_MS, GOLD_SLOW_DURATION,
-  COMBO_WINDOW, OBSTACLE_EVERY
-} from './constants.js';
-import { FoodSystem } from './food.js';
+import './snake-core.js'; // side-effect：挂载 globalThis.SnakeCore（与服务端共用引擎）
+import { COLS, ROWS, SPEEDS, DEF_SPEED, T } from './constants.js';
 import { store } from '@wg/ui';
+
+const C = globalThis.SnakeCore;
+export const SPEED_MODES = ['turtle', 'slow', 'normal', 'fast', 'turbo'];
+
+// 引擎颜色索引 → CSS（HEAD=-2 蛇头 / GOLD=-1 金色 / 0..9 食物调色板）
+function mapColor(idx) {
+  const th = T();
+  if (idx === C.HEAD) return th.headColor;
+  if (idx === C.GOLD) return th.goldGlow;
+  return th.foodColors[idx % th.foodColors.length];
+}
 
 export class Game {
   constructor(canvas, scoreEl, bestEl) {
@@ -17,6 +23,7 @@ export class Game {
     this.CELL = 24;
     this.W = 0; this.H = 0;
 
+    // 设置项（下一局生效——引擎需要整局固定的参数）
     this.speedIdx = store.getNum('snake_speed', DEF_SPEED);
     if (isNaN(this.speedIdx) || this.speedIdx < 0 || this.speedIdx >= SPEEDS.length) this.speedIdx = DEF_SPEED;
     this.wrap = localStorage.getItem('snake_wrap') === '1';
@@ -24,164 +31,108 @@ export class Game {
     this.best = store.getNum('snake_best', 0);
     this.bestEl.textContent = this.best;
 
-    this.foodSystem = new FoodSystem(this);
     this.onGameOver = null;
     this.onCombo = null;
+    this.onEatFx = null; // (isGold) => void 吃食特效回调
+    this.acc = 0;
+    this.last = 0;
+
+    // 引擎状态 + 录制
+    this.S = null;          // SnakeCore.createGame 状态
+    this.rec = [];          // 本局转向记录 {t, a}
+    this.pendingDirs = [];  // 本 tick 待应用的转向 [[dx,dy]...]
+    this.playMs = 0;        // 真实用时（不含暂停）
+    this.submitted = false; // 本局已提交云端
+
+    // 视图字段（renderer 读取）：snake/foods/gold/obstacles/headColor/bodyColors/slowUntil/score/eaten
+    this.syncView();
     this.reset();
   }
 
   get speed() { return SPEEDS[this.speedIdx].ms; }
-  get effectiveSpeed() {
-    return this.slowUntil && performance.now() < this.slowUntil ? GOLD_SLOW_MS : this.speed;
+  // 供主循环使用的引擎速度（金色减速生效时更慢）
+  get engineSpeed() {
+    return this.S ? C.SPEEDS[this.S.speedIdx] : this.speed;
   }
 
   setSpeed(i) { this.speedIdx = i; store.set('snake_speed', i); }
   setWrap(v) { this.wrap = v; localStorage.setItem('snake_wrap', v ? '1' : '0'); }
 
   reset() {
-    this.headColor = T().headColor;
-    this.bodyColors = [];
-    this.foods = [];
-    this.gold = null;
-    this.goldTimer = 0;
-    this.obstacles = [];
-    this.snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
-    this.dir = { x: 1, y: 0 };
-    this.nextDir = { x: 1, y: 0 };
-    this.score = 0;
-    this.acc = 0;
-    this.last = 0;
-    this.dead = false;
+    const seed = genSeed();
+    this.S = C.createGame(seed, this.speedIdx, this.wrap);
+    this.rec = [];
+    this.pendingDirs = [];
+    this.playMs = 0;
+    this.submitted = false;
     this.paused = true;
     this.running = true;
-    this.eaten = 0;
-    this.eatenRecent = [];
-    this.combo = 0;
-    this.lastEatTime = 0;
-    this.slowUntil = 0;
     this.scoreEl.textContent = '0';
-    this.foodSystem.placeAll();
+    this.syncView();
   }
 
+  // 输入：转向（带防回头，引擎内判定），排队到下一 tick
   setDir(x, y) {
-    if (x === -this.dir.x && y === -this.dir.y) return;
-    this.nextDir = { x, y };
+    if (!this.S || this.S.dead || this.paused) return;
+    this.pendingDirs.push([x, y]);
   }
 
+  // 每 tick：应用排队转向 → 引擎推进 → 同步视图
   tick() {
-    this.dir = this.nextDir;
-    let nx = this.snake[0].x + this.dir.x;
-    let ny = this.snake[0].y + this.dir.y;
-
-    // 穿墙 / 撞墙
-    if (this.wrap) {
-      if (nx < 0) nx = COLS - 1;
-      if (nx >= COLS) nx = 0;
-      if (ny < 0) ny = ROWS - 1;
-      if (ny >= ROWS) ny = 0;
-    } else if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) {
-      return this.gameOver();
+    if (!this.S || this.S.dead) return;
+    const dirs = this.pendingDirs; this.pendingDirs = [];
+    const prevScore = this.S.score;
+    C.stepTick(this.S, dirs);
+    if (dirs.length) for (const d of dirs) this.rec.push({ t: this.S.tick, a: dirChar(d) });
+    this.syncView();
+    this.scoreEl.textContent = String(this.S.score);
+    if (this.S.score !== prevScore && this.onCombo) {
+      this.onCombo(this.S.combo, Math.max(1, this.S.combo), false);
     }
-
-    const head = { x: nx, y: ny };
-
-    // 撞自己
-    for (let i = 0; i < this.snake.length - 1; i++) {
-      if (this.snake[i].x === nx && this.snake[i].y === ny) return this.gameOver();
-    }
-    // 撞障碍物
-    for (const o of this.obstacles) if (o.x === nx && o.y === ny) return this.gameOver();
-
-    const food = this.foodSystem.hitTest(head);
-    let goldHit = false;
-    if (this.gold && this.gold.x === nx && this.gold.y === ny) {
-      goldHit = true; this.gold = null;
-    }
-
-    this.snake.unshift(head);
-
-    if (food) {
-      this.bodyColors.unshift(this.headColor);
-      this.headColor = food.color;
-      this.onEat(false);
-    } else if (goldHit) {
-      this.bodyColors.unshift(T().goldFill);
-      this.headColor = T().goldGlow;
-      this.onEat(true);
-    } else {
-      this.snake.pop();
-    }
-
-    this.foodSystem.replenish();
-
-    // 金色食物刷新
-    this.goldTimer += this.effectiveSpeed;
-    if (!this.gold && this.goldTimer >= GOLD_INTERVAL) {
-      this.goldTimer = 0;
-      this.spawnGold();
-    }
-    if (this.gold && performance.now() - this.gold.born > GOLD_LIFETIME) this.gold = null;
+    if (this.S.dead) this.gameOver();
   }
 
-  onEat(isGold) {
-    const now = performance.now();
-    // 连击
-    if (now - this.lastEatTime < COMBO_WINDOW) this.combo++;
-    else this.combo = 1;
-    this.lastEatTime = now;
-
-    const mult = Math.max(1, this.combo);
-    if (isGold) {
-      this.score += GOLD_SCORE * mult;
-      this.slowUntil = now + GOLD_SLOW_DURATION;
-    } else {
-      this.score += BASE_SCORE * mult;
+  // 引擎状态 → 渲染层字段（颜色索引转 CSS，时间戳换算到 performance.now）
+  syncView() {
+    const s = this.S;
+    if (!s) {
+      this.snake = []; this.foods = []; this.gold = null; this.obstacles = [];
+      this.headColor = T().headColor; this.bodyColors = []; this.score = 0; this.eaten = 0;
+      this.slowUntil = 0; this.combo = 0;
+      return;
     }
-    this.scoreEl.textContent = String(this.score);
-    if (this.onCombo) this.onCombo(this.combo, mult, isGold);
-
-    this.eaten++;
-    this.eatenRecent.push(isGold ? T().goldGlow : this.headColor);
-    if (this.eatenRecent.length > 3) this.eatenRecent.shift();
-    // 3 连同色消除
-    if (this.eatenRecent.length === 3 && this.eatenRecent.every(c => c === this.eatenRecent[0])) {
-      this.collapse();
-      this.eatenRecent = [];
-    }
-    // 障碍物
-    if (this.eaten % OBSTACLE_EVERY === 0) this.foodSystem.addObstacle();
-  }
-
-  spawnGold() {
-    const occ = this.foodSystem.occupiedKeys();
-    for (let i = 0; i < 200; i++) {
-      const x = Math.floor(Math.random() * COLS);
-      const y = Math.floor(Math.random() * ROWS);
-      if (!occ.includes(`${x},${y}`)) {
-        this.gold = { x, y, born: performance.now() };
-        occ.push(`${x},${y}`);
-        return;
-      }
-    }
-  }
-
-  collapse() {
-    const n = Math.min(3, this.bodyColors.length);
-    this.bodyColors.splice(0, n);
-    for (let i = 0; i < n && this.snake.length > 1; i++) this.snake.pop();
-    this.headColor = T().headColor;
-    this.score += COLLAPSE_SCORE * n;
-    this.scoreEl.textContent = String(this.score);
+    const th = T();
+    this.snake = s.snake;
+    this.foods = s.foods.map(f => ({ x: f.x, y: f.y, color: mapColor(f.color) }));
+    this.gold = s.gold ? { x: s.gold.x, y: s.gold.y, born: performance.now() - (s.accMs - s.gold.bornMs) } : null;
+    this.obstacles = s.obstacles;
+    this.headColor = mapColor(s.headColor);
+    this.bodyColors = s.bodyColors.map(mapColor);
+    this.score = s.score; this.eaten = s.eaten; this.combo = s.combo;
+    const slowRemain = s.slowUntilMs - s.accMs;
+    this.slowUntil = slowRemain > 0 ? performance.now() + slowRemain : 0;
+    void th;
   }
 
   gameOver() {
-    this.dead = true;
     this.running = false;
-    if (this.score > this.best) {
-      this.best = this.score;
+    const s = this.S;
+    if (s.score > this.best) {
+      this.best = s.score;
       store.set('snake_best', this.best);
       this.bestEl.textContent = String(this.best);
     }
-    if (this.onGameOver) this.onGameOver(this.score, this.best);
+    if (this.onGameOver) this.onGameOver(s.score, this.best, this);
   }
 }
+
+const DIR_CHARS = { '0,-1': 'u', '0,1': 'd', '-1,0': 'l', '1,0': 'r' };
+function dirChar(d) { return DIR_CHARS[d[0] + ',' + d[1]] || 'u'; }
+
+function genSeed() {
+  const b = new Uint8Array(8);
+  (self.crypto || self.msCrypto).getRandomValues(b);
+  return Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+}
+
+export { C as SnakeCore, COLS, ROWS };

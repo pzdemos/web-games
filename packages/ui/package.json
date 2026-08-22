@@ -6,6 +6,7 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./gameapi": "./src/gameapi.js",
     "./brand.css": "./src/brand.css"
   }
 }

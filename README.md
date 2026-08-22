@@ -28,9 +28,14 @@
 | 游戏 | 模式 | 验证器 |
 |------|------|--------|
 | 扫雷 | beginner/intermediate/expert/daily | `mines-replay`（前端共引擎） |
-| 俄罗斯方块 | classic | `tetris-replay`（`games/tetris/src/tetris-core.js` 与 gameapi 同步副本，50ms 确定性 tick + 种子方块序列 + 操作流重放） |
+| 俄罗斯方块 | classic | `tetris-replay`（`games/tetris/src/tetris-core.js`，50ms 确定性 tick + 种子方块序列） |
+| 2048 | classic | `2048-replay`（`games/2048/src/2048-core.js`，种子出块 + 走子重放） |
+| 贪吃蛇 | turtle/slow/normal/fast/turbo | `snake-replay`（`games/snake/src/snake-core.js`，实时机制换算为游戏毫秒的确定性 tick） |
+| 打砖块 | classic | `brick-replay`（`games/brick/src/brick-core.js`，IEEE 精确运算物理 + 60Hz 固定 tick + 事件流） |
 
-改动 `tetris-core.js` 后：同步到 `/opt/gameapi/src/games/tetris-core.js`（md5 须一致）→ `systemctl restart gameapi` → `pnpm --filter @wg/tetris build`。
+前端通用接入模块：`packages/ui/src/gameapi.js`（`mountGameApi()`：注入登录/账号/排行榜弹窗 + toast，管理游客/正式账号，提供 submitPlay）。
+
+改动任一 `*-core.js` 后：同步到 `/opt/gameapi/src/games/`（md5 须一致）→ `systemctl restart gameapi` → `pnpm build`。
 
 ## 目录结构
 

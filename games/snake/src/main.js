@@ -1,10 +1,11 @@
 import './style.css';
-import { Game } from './game.js';
+import { Game, SPEED_MODES, SnakeCore as C } from './game.js';
 import { Renderer } from './renderer.js';
 import { Input } from './input.js';
 import { UI } from './ui.js';
-import { setTheme, getTheme, getThemeKey, applyCssVars } from './themes.js';
+import { setTheme, getTheme, applyCssVars } from './themes.js';
 import { mountBrand, setFavicon, svgFavicon } from '@wg/ui';
+import { mountGameApi } from '@wg/ui/gameapi';
 
 function applyFavicon() {
   const t = getTheme();
@@ -29,39 +30,69 @@ function boot() {
   const game = new Game(canvas, scoreEl, bestEl);
   const renderer = new Renderer(game);
 
+  // 云端战绩（gameapi：账号 + 排行榜 + 服务端重放验证）
+  const gapi = mountGameApi({
+    game: 'snake',
+    lsKey: 'snake',
+    modes: SPEED_MODES.map((id, i) => ({ id, label: ['龟速', '慢速', '普通', '快速', '极速'][i] })),
+    defaultMode: SPEED_MODES[game.speedIdx],
+    chip: document.getElementById('userChip'),
+    lbBtn: document.getElementById('lbBtn')
+  });
+
   // 主题切换回调：刷新蛇头色 + 重绘 + 换 favicon
   const onThemeChange = () => {
-    game.headColor = getTheme().headColor;
+    game.syncView();
     renderer.draw();
     applyFavicon();
   };
   const ui = new UI(game, onThemeChange);
 
-  game.onGameOver = (s, b) => ui.showGameOver(s, b);
+  game.onGameOver = (s, b, g) => {
+    ui.showGameOver(s, b);
+    // 终局提交云端（服务端用同款引擎重放验证）
+    const S = g.S;
+    gapi.submitPlay({
+      mode: SPEED_MODES[S.speedIdx],
+      won: true,
+      score: S.score,
+      detail: {
+        seed: S.seed,
+        moves: C.serializeMoves(g.rec),
+        timeMs: Math.round(g.playMs),
+        score: S.score,
+        params: { speed: S.speedIdx, wrap: S.wrap }
+      }
+    });
+  };
   game.onCombo = (c, m, gold) => ui.flashCombo(c, m, gold);
 
   function start() {
-    if (game.dead) game.reset();
+    if (game.dead || !game.running) game.reset();
     game.paused = false;
     ui.hideOverlay();
     game.last = performance.now();
     requestAnimationFrame(loop);
   }
 
+  // 主循环：真实时间累加 → 按引擎速度推进 tick（与重放同构）
   function loop(ts) {
-    if (!game.running || game.dead) return;
+    if (!game.running || game.S.dead) return;
     if (game.paused) {
       renderer.draw();
       game.last = ts;
       requestAnimationFrame(loop);
       return;
     }
-    game.acc += ts - game.last;
+    let dt = Math.min(ts - game.last, 200);
     game.last = ts;
-    if (game.acc >= game.effectiveSpeed) {
-      game.acc = 0;
+    game.playMs += dt;
+    game.acc += dt;
+    let guard = 0;
+    while (game.acc >= game.engineSpeed && guard++ < 40) {
+      game.acc -= game.engineSpeed;
       game.tick();
-      if (game.dead) { renderer.draw(); return; }
+      if (game.S.dead) { renderer.draw(); return; }
     }
     renderer.draw();
     requestAnimationFrame(loop);

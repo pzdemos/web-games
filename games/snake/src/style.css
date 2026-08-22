@@ -149,3 +149,28 @@ button:hover { filter: brightness(1.12); }
   #overlay p { font-size: 13px; }
   button { padding: 10px 28px; font-size: 15px; }
 }
+
+/* ===== gameapi 账号/排行榜入口 + 弹窗主题适配 ===== */
+#bar { flex-wrap: wrap; }
+.gapi-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 3px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  max-width: 150px; overflow: hidden; font-family: inherit;
+}
+.gapi-chip .wgapi-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 5px var(--accent); flex-shrink: 0; }
+.gapi-lb {
+  background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  border-radius: 14px; padding: 3px 10px; font-size: 15px; cursor: pointer; line-height: 1.4;
+}
+:root {
+  --wgapi-panel: #1e293b;
+  --wgapi-screen: #0f172a;
+  --wgapi-text: #e2e8f0;
+  --wgapi-muted: #94a3b8;
+  --wgapi-border: #334155;
+  --wgapi-accent: #38bdf8;
+  --wgapi-accent-text: #08110c;
+  --wgapi-bg: rgba(8,12,18,.62);
+}

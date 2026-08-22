@@ -1,5 +1,8 @@
 import './style.css';
+import './2048-core.js'; // side-effect：挂载 globalThis.Core2048（与服务端共用引擎）
 import { mountBrand, setFavicon, svgFavicon } from '@wg/ui';
+import { mountGameApi } from '@wg/ui/gameapi';
+const C = globalThis.Core2048;
 setFavicon(svgFavicon('0 0 100 100', `<rect width='100' height='100' rx='20' fill='#f65e3b'/><text x='50' y='52' font-size='40' font-weight='800' fill='#fff' font-family='Arial' text-anchor='middle' dominant-baseline='central'>2048</text>`));
 mountBrand();
 (function(){
@@ -16,6 +19,14 @@ mountBrand();
   const scoreBox=scoreEl.closest('.score-box');
   document.getElementById('newBtn').onclick=newGame;
   document.getElementById('ovBtn').onclick=newGame;
+
+  // 云端战绩（gameapi：账号 + 排行榜 + 服务端重放验证）
+  const gapi=mountGameApi({
+    game:'2048', lsKey:'g2048',
+    modes:[{id:'classic',label:'经典'}],
+    chip:document.getElementById('userChip'),
+    lbBtn:document.getElementById('lbBtn')
+  });
 
   // 背景格子
   for(let i=0;i<SIZE*SIZE;i++){const c=document.createElement('div');c.className='cell';boardEl.appendChild(c);}
@@ -45,9 +56,14 @@ mountBrand();
   }
   function fontFor(v){return Math.round(tileSize*(v<100?.44:v<1000?.37:v<10000?.3:.24));}
 
-  let grid,score,best=+localStorage.getItem('best2048')||0,cells,tileSize,gap,pad,won,over,idSeq;
-  let tileEls=new Map(),animating=false,pendingNew=null,resolveTimer=null;
+  let G,dirs,startTs,best=+localStorage.getItem('best2048')||0,tileSize,gap,pad,won;
+  let tileEls=new Map(),animating=false,pendingNew=null,resolveTimer=null,submitted=false;
   bestEl.textContent=best;
+
+  function genSeed(){
+    const b=new Uint8Array(8);(self.crypto||self.msCrypto).getRandomValues(b);
+    return Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+  }
 
   function measure(){
     // offsetWidth 不受入场动画 transform 影响,getBoundingClientRect 会读到缩放中的尺寸
@@ -95,7 +111,7 @@ mountBrand();
     tilesEl.innerHTML='';tileEls.clear();
     let n=0;
     for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
-      const t=grid[r][c];if(!t)continue;
+      const t=G.grid[r][c];if(!t)continue;
       const el=spawnTile(r,c,t.v,staggerNew?'new':null,staggerNew?(n++)*70:0);
       tileEls.set(t.id,el);
     }
@@ -104,31 +120,19 @@ mountBrand();
   function cancelAnim(){clearTimeout(resolveTimer);animating=false;pendingNew=null;}
   window.addEventListener('resize',()=>{cancelAnim();measure();rebuild(false);});
 
-  function emptyGrid(){grid=[];for(let r=0;r<SIZE;r++)grid[r]=new Array(SIZE).fill(null);}
-
-  function addRandom(){
-    const spots=[];
-    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(!grid[r][c])spots.push([r,c]);
-    if(!spots.length)return null;
-    const [r,c]=spots[Math.floor(Math.random()*spots.length)];
-    const t={v:Math.random()<0.9?2:4,id:++idSeq};
-    grid[r][c]=t;
-    return {r,c,v:t.v,id:t.id};
-  }
-
   function newGame(){
     cancelAnim();
-    idSeq=0;score=0;won=false;over=false;
-    emptyGrid();addRandom();addRandom();
-    scoreEl.textContent=score;
+    G=C.createGame(genSeed());C.startGame(G);
+    dirs=[];startTs=performance.now();won=false;submitted=false;
+    scoreEl.textContent=G.score;
     overlay.classList.remove('show');
     confettiEl.innerHTML='';
     measure();rebuild(true);
   }
 
   function draw(gained){
-    scoreEl.textContent=score;
-    if(score>best){best=score;localStorage.setItem('best2048',best);}
+    scoreEl.textContent=G.score;
+    if(G.score>best){best=G.score;localStorage.setItem('best2048',best);}
     bestEl.textContent=best;
     if(gained>0){
       scoreBox.classList.remove('bump');void scoreBox.offsetWidth;scoreBox.classList.add('bump');
@@ -163,43 +167,12 @@ mountBrand();
   }
 
   function move(dir){
-    if(over||animating)return;
-    clearFlags();
-    let moved=false,gained=0;
-    const vec=getVec(dir),trav=buildTraversals(vec),anims=[];
-    for(const r of trav.rows){
-      for(const c of trav.cols){
-        const t=grid[r][c];if(!t)continue;
-        // 找最远可滑位置
-        let pr=r,pc=c;
-        while(true){
-          const nr=pr+vec.r,nc=pc+vec.c;
-          if(nr<0||nr>=SIZE||nc<0||nc>=SIZE||grid[nr][nc])break;
-          pr=nr;pc=nc;
-        }
-        // 检查合并目标
-        const mr=pr+vec.r,mc=pc+vec.c;
-        if(mr>=0&&mr<SIZE&&mc>=0&&mc<SIZE){
-          const tgt=grid[mr][mc];
-          if(tgt&&tgt.v===t.v&&!tgt.merged){
-            grid[r][c]=null;
-            const merged={v:t.v*2,id:++idSeq,merged:true};
-            grid[mr][mc]=merged;
-            score+=merged.v;
-            gained+=merged.v;
-            if(merged.v===2048&&!won)won=true;
-            moved=true;
-            anims.push({type:'merge',srcId:t.id,dstId:tgt.id,newId:merged.id,r:mr,c:mc,v:merged.v});
-            continue;
-          }
-        }
-        if(pr!==r||pc!==c){
-          grid[r][c]=null;grid[pr][pc]=t;moved=true;
-          anims.push({type:'slide',id:t.id,r:pr,c:pc});
-        }
-      }
-    }
-    if(!moved)return;
+    if(!G||G.over||animating)return;
+    // 引擎推进（确定性：种子出块 + 重放同构），返回动画描述
+    const r=C.move(G,dir);
+    if(!r.moved)return;
+    dirs.push(dir);
+    const anims=r.anims;
     animating=true;
     nudge(dir);
     // 阶段一:滑动现有元素(CSS transition 接管)
@@ -207,22 +180,29 @@ mountBrand();
       if(a.type==='slide')place(tileEls.get(a.id),a.r,a.c);
       else place(tileEls.get(a.srcId),a.r,a.c);
     }
-    pendingNew=addRandom();
-    resolveTimer=setTimeout(()=>resolveAnims(anims),SLIDE_MS);
-    draw(gained);
-    checkEnd();
+    pendingNew=r.spawn;
+    resolveTimer=setTimeout(()=>{resolveAnims(anims);draw(r.gained);checkEnd(r);},SLIDE_MS);
   }
 
-  function checkEnd(){
-    if(isOver()){
-      over=true;
+  function submitPlay(){
+    if(submitted)return;
+    submitted=true;
+    gapi.submitPlay({
+      mode:'classic',won:true,score:G.score,
+      detail:{seed:G.seed,moves:C.serializeMoves(dirs),timeMs:Math.round(performance.now()-startTs),score:G.score}
+    });
+  }
+
+  function checkEnd(r){
+    if(r.over){
+      submitPlay();
       ovTitle.textContent='游戏结束';
-      ovText.textContent='得分 '+score;
+      ovText.textContent='得分 '+G.score;
       setTimeout(()=>overlay.classList.add('show'),300);
-    }else if(won===true){
-      won='shown';
+    }else if(r.won2048&&won!==true&&won!=='shown'){
+      won=true;
       ovTitle.textContent='达成 2048!';
-      ovText.textContent='得分 '+score+' · 可继续挑战';
+      ovText.textContent='得分 '+G.score+' · 可继续挑战';
       setTimeout(()=>{overlay.classList.add('show');confettiBurst();},300);
     }
   }
@@ -242,26 +222,6 @@ mountBrand();
       p.addEventListener('animationend',()=>p.remove(),{once:true});
       confettiEl.appendChild(p);
     }
-  }
-
-  function clearFlags(){for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){if(grid[r][c])grid[r][c].merged=false;}}
-
-  function getVec(dir){return {0:{r:-1,c:0},1:{r:0,c:1},2:{r:1,c:0},3:{r:0,c:-1}}[dir];}
-  function buildTraversals(v){
-    const rows=[],cols=[];
-    for(let i=0;i<SIZE;i++){rows.push(i);cols.push(i);}
-    if(v.r===1)rows.reverse();
-    if(v.c===1)cols.reverse();
-    return {rows,cols};
-  }
-  function isOver(){
-    for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
-      if(!grid[r][c])return false;
-      const v=grid[r][c].v;
-      if(r+1<SIZE&&grid[r+1][c]&&grid[r+1][c].v===v)return false;
-      if(c+1<SIZE&&grid[r][c+1]&&grid[r][c+1].v===v)return false;
-    }
-    return true;
   }
 
   // 键盘

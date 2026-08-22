@@ -78,3 +78,29 @@
     #brand{bottom:6px;font-size:11px;}
     body{padding:10px;}
   }
+
+/* ===== gameapi 入口 + 弹窗主题适配 ===== */
+.scores { flex-wrap: wrap; }
+.gapi-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.08); color: #fed7aa;
+  border: 1px solid rgba(251,191,36,.35); border-radius: 12px;
+  padding: 4px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  max-width: 150px; overflow: hidden; font-family: inherit;
+}
+.gapi-chip .wgapi-dot { width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 5px #fbbf24; flex-shrink: 0; }
+.gapi-lb {
+  background: rgba(255,255,255,.08); color: #fed7aa;
+  border: 1px solid rgba(251,191,36,.35); border-radius: 12px;
+  padding: 4px 10px; font-size: 14px; cursor: pointer; line-height: 1.4;
+}
+:root {
+  --wgapi-panel: #241812;
+  --wgapi-screen: #17100b;
+  --wgapi-text: #f5e6d3;
+  --wgapi-muted: #b09a82;
+  --wgapi-border: #4a382a;
+  --wgapi-accent: #f97316;
+  --wgapi-accent-text: #1a0e06;
+  --wgapi-bg: rgba(10,6,4,.66);
+}
