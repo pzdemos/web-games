@@ -597,7 +597,7 @@ function saveAuth(){lsw(LS.auth,{token:auth.token,user:auth.user,guest:!!auth.gu
 function api(path,opt){opt=opt||{};opt.headers=Object.assign({'Content-Type':'application/json'},opt.headers||{});if(auth.token)opt.headers.Authorization='Bearer '+auth.token;return fetch(API+path,opt).then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(!r.ok)throw d;return d})})}
 function chip(){var b=els.userChip;b.classList.toggle('logged',!!auth.token);b.querySelector('.uname').textContent=auth.token&&auth.user?auth.user.username:'游客'}
 chip();
-if(auth.token){api('/auth/me').then(function(d){auth.user=d.user;auth.guest=!!d.user.is_guest;saveAuth();chip()}).catch(function(){})}
+if(auth.token){api('/auth/me').then(function(d){auth.user=d.user;auth.guest=!!d.user.is_guest;saveAuth();chip()}).catch(function(e){if(e&&e.code==='stale'){auth.token=null;auth.user=null;saveAuth();chip()}})}
 else{api('/auth/guest',{method:'POST'}).then(function(d){auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();chip()}).catch(function(){})}
 
 /* state */
@@ -718,7 +718,7 @@ s[k]=d;lsw(LS.stats,s);foot();return rec;
 var CLOUD={beginner:1,intermediate:1,expert:1,daily:1};
 function submit(){
 if(!CLOUD[S.mode])return;
-var send=function(){api('/plays',{method:'POST',body:JSON.stringify({game:'mines',mode:S.mode,won:S.win,score:S.time*1000,detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}})}).then(function(d){if(S.win&&typeof d.rank==='number')toast('战绩已验证 · 当前第 '+d.rank+' 名');else if(S.win)toast('战绩已记录')}).catch(function(e){toast('战绩提交失败'+(e&&e.error?' · '+e.error:''))})};
+var send=function(retried){api('/plays',{method:'POST',body:JSON.stringify({game:'mines',mode:S.mode,won:S.win,score:S.time*1000,detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}})}).then(function(d){if(S.win&&typeof d.rank==='number')toast('战绩已验证 · 当前第 '+d.rank+' 名');else if(S.win)toast('战绩已记录')}).catch(function(e){if(e&&e.code==='stale'&&!retried){auth.token=null;auth.user=null;saveAuth();chip();api('/auth/guest',{method:'POST'}).then(function(d){auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();chip();send(true)}).catch(function(){});return}toast('战绩提交失败'+(e&&e.error?' · '+e.error:''))})};
 if(!auth.token){api('/auth/guest',{method:'POST'}).then(function(d){auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();chip();send()}).catch(function(){});return}
 send();
 }

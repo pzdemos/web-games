@@ -726,7 +726,7 @@ function renderUserChip(){
 }
 renderUserChip();
 if(auth.token){
-  fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(d){auth.user=d.user;auth.guest=!!d.user.is_guest;saveAuth();renderUserChip()}).catch(function(){});
+  fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+auth.token}}).then(function(r){return r.ok?r.json():Promise.reject(r.status)}).then(function(d){auth.user=d.user;auth.guest=!!d.user.is_guest;saveAuth();renderUserChip()}).catch(function(st){if(st===401){auth.token=null;auth.user=null;saveAuth();renderUserChip()}});
 }else{
   api('/auth/guest',{method:'POST'}).then(function(d){
     auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();renderUserChip();
@@ -952,14 +952,23 @@ function fmtTime(t){var m=(t/60)|0,s=t%60;return String(m).padStart(2,'0')+':'+S
 var CLOUD_MODES={beginner:1,intermediate:1,expert:1,daily:1};
 function submitPlay(){
   if(!CLOUD_MODES[S.mode])return;
-  var doSubmit=function(){
+  var doSubmit=function(retried){
     api('/plays',{method:'POST',body:JSON.stringify({
       game:'mines',mode:S.mode,won:S.win,score:S.time*1000,
       detail:{seed:S.seed,moves:S.moves,timeMs:S.time*1000,params:{rows:S.rows,cols:S.cols,mines:S.mines,noGuess:noGuess}}
     })}).then(function(d){
       if(S.win&&typeof d.rank==='number')toast('战绩已验证 · 当前第 '+d.rank+' 名');
       else if(S.win)toast('战绩已记录');
-    }).catch(function(e){toast('战绩提交失败'+(e&&e.error?(' · '+e.error):''))});
+    }).catch(function(e){
+      if(e&&e.code==='stale'&&!retried){
+        auth.token=null;auth.user=null;auth.guest=true;saveAuth();renderUserChip();
+        api('/auth/guest',{method:'POST'}).then(function(d){
+          auth.token=d.token;auth.user=d.user;auth.guest=true;saveAuth();renderUserChip();doSubmit(true);
+        }).catch(function(){});
+        return;
+      }
+      toast('战绩提交失败'+(e&&e.error?(' · '+e.error):''));
+    });
   };
   if(!auth.token){
     api('/auth/guest',{method:'POST'}).then(function(d){
