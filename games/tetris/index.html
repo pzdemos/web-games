@@ -14,6 +14,7 @@
       <div class="sc"><div class="l">Score</div><div class="v" id="score">0</div></div>
       <div class="sc"><div class="l">Level</div><div class="v" id="level">1</div></div>
       <div class="sc"><div class="l">Lines</div><div class="v" id="lines">0</div></div>
+      <button class="chip" id="userChip" title="账号"><span class="dot"></span>登录 / 注册</button>
     </div>
   </div>
 
@@ -36,6 +37,12 @@
         <div class="val" id="best">0</div>
       </div>
       <div class="box">
+        <div class="lbl">排行榜</div>
+        <div class="btns" style="margin-top:4px;">
+          <button id="lbBtn" style="width:100%">🏆 云端排行</button>
+        </div>
+      </div>
+      <div class="box">
         <div class="lbl">操作</div>
         <div class="btns" style="margin-top:4px;">
           <button class="ghost" id="pauseBtn">暂停</button>
@@ -54,8 +61,55 @@
 
   <div class="hint">
     <kbd>←→</kbd> 移动 &nbsp; <kbd>↑</kbd>/<kbd>X</kbd> 旋转 &nbsp; <kbd>↓</kbd> 软降 &nbsp; <kbd>空格</kbd> 硬降 &nbsp; <kbd>P</kbd> 暂停 &nbsp; <kbd>R</kbd> 重开<br>
-    合成满行消除 · 每清 <b>10 行</b> 升一级 · 速度递增
+    合成满行消除 · 每清 <b>10 行</b> 升一级 · 速度递增 · 终局自动提交 <b>云端排行榜</b>（服务端重放验证）
   </div>
+
+  <!-- 登录 / 注册 -->
+  <div class="modal" id="authModal">
+    <div class="mpanel">
+      <h3 id="authTitle">玩家账号</h3>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="on">登 录</button>
+        <button id="tabReg">注 册</button>
+      </div>
+      <div class="field"><label>用户名</label><input id="authUser" maxlength="16" autocomplete="username" placeholder="2-16 位：字母/数字/中文"></div>
+      <div class="field"><label>密码</label><input id="authPass" type="password" maxlength="64" autocomplete="current-password" placeholder="至少 6 位"></div>
+      <div class="field" id="emailField" style="display:none"><label>邮箱（选填 · 用于验证与找回）</label><input id="authEmail" type="email" maxlength="190" placeholder="you@example.com"></div>
+      <div class="field code-row" id="codeField" style="display:none">
+        <input id="authCode" maxlength="6" inputmode="numeric" placeholder="6 位数字" style="flex:1">
+        <button type="button" class="ghost" id="sendCodeBtn">发送验证码</button>
+      </div>
+      <div class="field"><div class="err" id="authErr"></div></div>
+      <div class="center"><button class="btn" id="authGo">登 录</button></div>
+      <p class="mnote">战绩默认挂在自动创建的游客账号上，升级正式账号后自动继承</p>
+    </div>
+  </div>
+
+  <!-- 账号信息 -->
+  <div class="modal" id="acctModal">
+    <div class="mpanel">
+      <h3 id="acctName"></h3>
+      <p class="mnote" id="acctSince"></p>
+      <div id="acctRecent" style="margin:8px 0"></div>
+      <div class="btns" style="flex-direction:column;gap:8px">
+        <button id="acctLb" style="width:100%">🏆 我的排名</button>
+        <button id="acctUpgrade" style="width:100%">升级为正式账号</button>
+        <button id="acctLogout" class="ghost" style="width:100%">退出登录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 排行榜 -->
+  <div class="modal" id="lbModal">
+    <div class="mpanel wide">
+      <h3>🏆 经典模式 · 排行榜</h3>
+      <div id="lbBody" class="lb-wrap"></div>
+      <div class="lb-me" id="lbMyRow" style="display:none"></div>
+      <div class="center" style="margin-top:10px"><button class="ghost" onclick="document.getElementById('lbModal').classList.remove('show')">关 闭</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
 <script type="module" src="/src/main.js"></script>
 </body>

@@ -21,6 +21,17 @@
 - **`games/sokoban/`** — 推箱子：`index.html`（游戏本体，内嵌 57 关）+ `server.py`（stdlib 静态+进度 API，systemd `sokoban.service`，端口 2050）+ `pipeline/`（关卡生成管线：设计/随机生成/A* 求解验证/房间组合，产物已嵌入 index.html）
 - **`games/portal/`** — 游戏厅门户单文件源码
 
+## 云端战绩（gameapi 接入）
+
+接入的游戏支持账号 + 云端排行榜，战绩由服务端重放整局验证，不可伪造：
+
+| 游戏 | 模式 | 验证器 |
+|------|------|--------|
+| 扫雷 | beginner/intermediate/expert/daily | `mines-replay`（前端共引擎） |
+| 俄罗斯方块 | classic | `tetris-replay`（`games/tetris/src/tetris-core.js` 与 gameapi 同步副本，50ms 确定性 tick + 种子方块序列 + 操作流重放） |
+
+改动 `tetris-core.js` 后：同步到 `/opt/gameapi/src/games/tetris-core.js`（md5 须一致）→ `systemctl restart gameapi` → `pnpm --filter @wg/tetris build`。
+
 ## 目录结构
 
 ```
