@@ -69,9 +69,14 @@ pnpm --filter @wg/snake dev  # 单独启动某个游戏
 构建产物直接输出到 nginx 静态目录，构建完即上线：
 
 ```bash
-pnpm build                   # 构建全部 → 输出到 /var/www/{snake,tetris,brick} 和 /opt/game2048
+pnpm build                   # 构建全部 → 输出到 /var/www/{snake,tetris,brick,mines} 和 /opt/game2048
 pnpm build:snake             # 单独构建某个游戏
+pnpm run sync                # 同步非 Vite 成员（portal→/var/www/games，sokoban→/opt/sokoban 并按需重启）
+pnpm deploy                  # = build 全部 + sync
 ```
+
+> 各包的 `vite.config.js` 里 `build.outDir` 指向对应的 nginx 静态根目录，构建即部署。
+> mines 的 `m.html`（手机版）是 rollup 第二入口，随构建自动输出，`emptyOutDir` 不会丢文件。
 
 > 各包的 `vite.config.js` 里 `build.outDir` 指向对应的 nginx 静态根目录，构建即部署。
 

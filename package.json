@@ -11,6 +11,7 @@
     "build:tetris": "pnpm --filter ./games/tetris build",
     "build:brick": "pnpm --filter ./games/brick build",
     "deploy": "pnpm -r build && pnpm run sync",
+    "sync": "bash scripts/sync.sh",
     "preview": "pnpm -r --parallel preview",
     "build:mines": "pnpm --filter ./games/mines build"
   },
