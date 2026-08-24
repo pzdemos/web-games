@@ -113,6 +113,7 @@ export class Fighter {
   // ---------- 每帧更新 ----------
   update(inp, foe, world) {
     this.stateT++;
+    this.animT = (this.animT || 0) + 1;
     if (this.invuln > 0) this.invuln--;
     const fwd = this.facing === 1 ? inp.r : inp.l;
     const back = this.facing === 1 ? inp.l : inp.r;
@@ -326,7 +327,7 @@ export class Fighter {
         const col = this.char.col;
         world.projectiles.push({
           owner: this, x: this.x + this.facing * 46, y: a.kind === 'wave' ? GROUND - 20 : this.y - 118,
-          vx: this.facing * d.speed, visual: this.char.sp1.visual, c1: col.flame, c2: col.flame2,
+          vx: this.facing * d.speed, visual: this.char.sp1.visual, lf2: this.char.lf2, c1: col.flame, c2: col.flame2,
           dmg: d.dmg * this.char.atk, guard: d.guard, kb: d.kb, r: a.kind === 'wave' ? 26 : 24, life: 240, ground: a.kind === 'wave'
         });
       }
@@ -347,7 +348,7 @@ export class Fighter {
         const col = this.char.col;
         world.projectiles.push({
           owner: this, x: this.x + this.facing * 52, y: this.y - 116, vx: this.facing * 6.4, visual: 'blast',
-          c1: col.flame, c2: col.flame2, dmg: d.dmg * this.char.atk, guard: d.guard, kb: d.kb, r: 46, life: 300, pierce: true
+          lf2: this.char.lf2, c1: col.flame, c2: col.flame2, dmg: d.dmg * this.char.atk, guard: d.guard, kb: d.kb, r: 46, life: 300, pierce: true
         });
         FX.ring(this.x, this.y - 116, col.flame, 60); world.shake = 14;
       }

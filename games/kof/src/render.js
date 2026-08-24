@@ -1,5 +1,6 @@
-// 渲染器：骨骼小人 / 头像 / 舞台 / 特效 / 弹道（全部程序化绘制）
+// 渲染器：舞台 / 特效 / 弹道（角色由 sprites.js 的 LF2 帧动画绘制，本文件的骨架绘制作为回退）
 import { P } from './poses.js';
+import { drawSpriteFighter, drawFace, drawBall } from './sprites.js';
 
 const D2R = Math.PI / 180;
 const THIGH = 44, SHIN = 42, TORSO = 54, UPPER = 32, FORE = 30, HEADR = 15;
@@ -76,8 +77,14 @@ function drawHair(ctx, char, hx, hy, r, t, big) {
   }
 }
 
-// ---------- 战斗小人 ----------
+// ---------- 战斗角色 ----------
 export function drawFighter(ctx, f, t) {
+  // 优先 LF2 sprite 帧动画
+  if (f.char && f.char.lf2 && drawSpriteFighter(ctx, f, t)) return;
+  drawSkeleton(ctx, f, t);
+}
+
+function drawSkeleton(ctx, f, t) {
   const ch = f.char, col = ch.col, B = ch.build || 1;
   const s = solve(f.pose);
   ctx.save();
@@ -171,8 +178,17 @@ export function drawShadow(ctx, f) {
   ctx.beginPath(); ctx.ellipse(f.x, 472, 40 * sc * (f.char.build || 1), 9 * sc, 0, 0, 7); ctx.fill();
 }
 
-// ---------- 头像（选人 / VS / 结算，大尺寸） ----------
+// ---------- 头像（选人 / VS / 结算，LF2 face 优先） ----------
 export function drawBust(ctx, char, cx, cy, s, t, mood) {
+  if (char.lf2 && drawFace(ctx, char.lf2, cx, cy, 150 * s, t)) return;
+  drawBustFallback(ctx, char, cx, cy, s, t, mood);
+}
+
+function drawBustFallback(ctx, char, cx, cy, s, t, mood) {
+  if (!char.col.hair) { // 无骨架配色数据时仅占位
+    ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(cx, cy, 40 * s, 0, 7); ctx.fill();
+    return;
+  }
   ctx.save();
   ctx.translate(cx, cy); ctx.scale(s, s);
   const r = 34;
@@ -423,6 +439,7 @@ export const FX = {
 
 // ---------- 弹道 ----------
 export function drawProjectile(ctx, p, t) {
+  if (p.visual === 'ball' || p.visual === 'blast') { drawBall(ctx, p, t); return; }
   ctx.save(); ctx.translate(p.x, p.y);
   if (p.visual === 'flame' || p.visual === 'dark') {
     const r = 20 + Math.sin(t * 0.5) * 3;

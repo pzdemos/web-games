@@ -8,6 +8,7 @@ import { drawHUD, drawAnnounce, drawCombo, drawSuperFlash } from './hud.js';
 import { InputManager } from './input.js';
 import { makeAI } from './ai.js';
 import { sfx, bgm, toggleMute, isMuted } from './sound.js';
+import { loadSprites } from './sprites.js';
 
 mountBrand();
 
@@ -34,7 +35,7 @@ canvas.addEventListener('pointerdown', e => {
 fit();
 
 // ---------- 全局状态 ----------
-let scene = 'title', sceneT = 0, lastTs = 0;
+let scene = 'loading', sceneT = 0, lastTs = 0;
 let difficulty = 'normal';
 let match = null;
 let world = null, ai = null, paused = false;
@@ -112,6 +113,7 @@ function frame(ts) {
   ctx.clearRect(0, 0, 960, 540);
 
   switch (scene) {
+    case 'loading': scLoading(); break;
     case 'title': scTitle(menu, clicks); break;
     case 'mode': scMode(menu, clicks); break;
     case 'select': scSelect(clicks); break;
@@ -125,6 +127,23 @@ function frame(ts) {
   }
 }
 requestAnimationFrame(frame);
+
+// ---------- 素材加载 ----------
+loadSprites(
+  p => { loadProgress = p; },
+  () => { setTimeout(() => { if (scene === 'loading') go('title'); }, 300); }
+);
+let loadProgress = 0;
+function scLoading() {
+  ctx.fillStyle = '#0c0705'; ctx.fillRect(0, 0, 960, 540);
+  bigText('拳 皇', 480, 200, 84, '#fff6dd', '#ff841f');
+  ctx.font = `600 16px ${FONT}`; ctx.fillStyle = '#c8b49a'; ctx.textAlign = 'center';
+  ctx.fillText('正在加载角色素材…', 480, 280);
+  ctx.fillStyle = 'rgba(255,255,255,.1)';
+  roundRectPath(330, 310, 300, 12, 6); ctx.fill();
+  ctx.fillStyle = '#ffb52a';
+  roundRectPath(330, 310, Math.max(8, 300 * loadProgress), 12, 6); ctx.fill();
+}
 
 // ---------- 标题 ----------
 function scTitle(menu, clicks) {
@@ -142,13 +161,14 @@ function scTitle(menu, clicks) {
   bigText('KOF · WEB 巅峰对决', 480, 232, 30, '#ffe28a', '#ff9a3a', 6);
   ctx.font = `600 14px ${FONT}`; ctx.fillStyle = '#c8b49a'; ctx.textAlign = 'center';
   ctx.fillText('必杀 ↓↘→+拳 · 升龙 →↓↘+拳 · 超必杀 ↓↘→↓↘→+重拳（气槽 MAX）', 480, 282);
+  ctx.fillText('角色：戴维斯 · 迪普 · 菲伦 · 丹尼斯 · 伍迪 · 路易斯', 480, 306);
 
   const b = { x: 355, y: 335, w: 250, h: 56, label: '按任意键 / 点击开始', primary: true, fs: 17, cb: () => go('mode') };
   buttons.push(b); drawBtn(b, sceneT % 900 < 500);
   if (menu.length || clicks.length) go('mode');
 
   ctx.font = `500 12px ${FONT}`; ctx.fillStyle = 'rgba(255,240,220,.38)'; ctx.textAlign = 'center';
-  ctx.fillText('致敬 SNK《拳皇》系列的同人 Web 复刻 · 全程序化绘制无外部素材 · M 键静音', 480, 504);
+  ctx.fillText('同人非商用复刻 · 角色动画素材来自开源游戏 Little Fighter 2（© Marti Wong & Starsky Wong）· M 静音', 480, 504);
 }
 
 // ---------- 模式选择 ----------
