@@ -407,9 +407,10 @@ function tick() {
     const foe = p.owner === f1 ? f2 : f1;
     const br = foe.bodyRect();
     if (!p.dead && Math.abs(p.x - (br.x + br.w / 2)) < 40 + p.r && p.y > br.y - 26 && p.y < br.y + br.h + 26
-        && foe.state !== 'ko' && foe.invuln <= 0) {
+        && foe.state !== 'ko' && foe.state !== 'knockdown' && foe.invuln <= 0) {
       hitByProjectile(p, foe, w);
       if (!p.pierce) p.dead = true;
+      else foe.invuln = Math.max(foe.invuln, 22); // 穿透弹命中后短暂无敌，防每帧重复判定
     }
     for (const q of w.projectiles) {
       if (q === p || q.owner === p.owner || q.dead || p.dead) continue;
@@ -514,7 +515,8 @@ function beginKO(winner, timeup) {
       loser.state = 'ko'; loser.stateT = 0;
       loser.onGround = false; loser.vy = -8.5; loser.vx = -loser.facing * 6.5;
     }
-    winner.atk = null;
+    // 不清 winner.atk：让攻击自然收招（loser 已躺地无敌），
+    // 避免出现 state='attack' + atk=null 的死局导致每帧报错
   }
 }
 
@@ -594,7 +596,7 @@ function scResult(menu, clicks) {
       [b1, b2].forEach(b => { buttons.push(b); drawBtn(b, false); });
     }
   } else {
-    const b1 = { x: 420, y: 320, w: 300, h: 54, label: '再战一局', primary: true, cb: () => go('vs') };
+    const b1 = { x: 420, y: 320, w: 300, h: 54, label: '再战一局', primary: true, cb: () => { match.stats = { startMs: performance.now(), maxCombo: 0, perfect: 0 }; go('vs'); } };
     const b2 = { x: 420, y: 384, w: 300, h: 42, label: '重新选人', fs: 15, cb: () => go('select') };
     const b3 = { x: 420, y: 434, w: 300, h: 40, label: '返回主菜单', fs: 14, cb: () => go('title') };
     [b1, b2, b3].forEach(b => { buttons.push(b); drawBtn(b, false); });

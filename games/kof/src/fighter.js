@@ -138,6 +138,18 @@ export class Fighter {
         // 自动面向
         this.facing = foe.x >= this.x ? 1 : -1;
         if (inp.d) { this.state = 'crouch'; this.stateT = 0; break; }
+        // ←← 后撤步（双击后方向，14 帧窗口）
+        if (back && !this.prevBack) {
+          if (this.stateT - (this.lastBackTap === undefined ? -99 : this.lastBackTap) <= 14) {
+            this.state = 'backstep'; this.stateT = 0;
+            this.onGround = false; this.vy = -5.6; this.vx = -this.facing * 7.5;
+            this.invuln = 9; this.lastBackTap = -99;
+            FX.dust(this.x, GROUND, 5); sfx('jump');
+            break;
+          }
+          this.lastBackTap = this.stateT;
+        }
+        this.prevBack = back;
         if (inp.u) { // 跳
           this.vy = this.char.jumpV; this.onGround = false;
           this.vx = (inp.r ? 1 : 0) * this.char.walk * 1.3 - (inp.l ? 1 : 0) * this.char.walk * 1.3;
@@ -171,6 +183,12 @@ export class Fighter {
         if (this.tryAttack(inp, world)) break;
         if (!inp.d) { this.state = 'idle'; this.stateT = 0; }
         else { this.vx = 0; this._pose(P.crouch, .2); }
+        break;
+      }
+
+      case 'backstep': {
+        this._pose(P.jumpUp, .22);
+        if (this.onGround) { this.state = 'idle'; this.stateT = 0; FX.dust(this.x, GROUND, 4); }
         break;
       }
 
@@ -260,6 +278,7 @@ export class Fighter {
   }
 
   _updateAttack(inp, world) {
+    if (!this.atk) { this.state = this.onGround ? 'idle' : 'jump'; this.stateT = 0; return; } // 自愈兜底：atk 丢失时立即归位
     const a = this.atk, d = a.def;
     a.t++;
     const total = d.startup + d.active + d.recover;
@@ -406,6 +425,7 @@ export function resolveAttack(attacker, defender, world) {
   const multi = d.multihit || a.multi;
   if (!multi && a.hitDone) return false;
   if (multi && a.t - a.lastHitT < (d.multihit ? Math.max(4, Math.floor(d.active / d.multihit)) : 5)) return false;
+  if (defender.state === 'ko' || defender.state === 'knockdown') return false; // 倒地/KO 全程无敌，防无限追打
 
   const hr = attacker.atkRect(), br = defender.bodyRect();
   if (!overlap(hr, br)) return false;
@@ -426,6 +446,7 @@ export function resolveAttack(attacker, defender, world) {
 }
 
 export function applyHit(attacker, defender, hit, hitRect, world) {
+  if (defender.state === 'ko') return; // K.O. 后不可再被攻击
   const cx = Math.max(hitRect.x, Math.min(defender.x, hitRect.x + hitRect.w));
   const cy = hitRect.y + hitRect.h / 2;
 
@@ -470,6 +491,7 @@ export function applyHit(attacker, defender, hit, hitRect, world) {
   }
   if (hit.knockdown && defender.onGround) {
     defender.state = 'knockdown'; defender.lieT = 0; defender.vx = attacker.facing * hit.kb;
+    defender.invuln = 46; // 倒地全程无敌（42帧卧地 + 起身缓冲）
   }
 
   // 打点表现

@@ -57,6 +57,7 @@ export class InputManager {
     const nub = document.createElement('div'); nub.className = 'nub';
     stick.appendChild(nub); L.appendChild(stick);
     const rectOf = () => stick.getBoundingClientRect();
+    let stickPid = null;   // 摇杆活动指针 id
     const setStick = e => {
       const r = rectOf();
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -66,16 +67,32 @@ export class InputManager {
       this.stick.x = dx; this.stick.y = dy; this.stick.active = true;
       nub.style.transform = `translate(calc(-50% + ${dx * 32}px), calc(-50% + ${dy * 32}px))`;
     };
-    stick.addEventListener('pointerdown', e => { e.preventDefault(); stick.setPointerCapture(e.pointerId); setStick(e); });
-    stick.addEventListener('pointermove', e => { if (this.stick.active) { e.preventDefault(); setStick(e); } });
-    const stickEnd = e => { this.stick.active = false; this.stick.x = 0; this.stick.y = 0; nub.style.transform = 'translate(-50%,-50%)'; };
-    stick.addEventListener('pointerup', stickEnd);
-    stick.addEventListener('pointercancel', stickEnd);
+    const stickEnd = e => {
+      if (stickPid !== null && e.pointerId !== stickPid) return;
+      stickPid = null;
+      this.stick.active = false; this.stick.x = 0; this.stick.y = 0;
+      nub.style.transform = 'translate(-50%,-50%)';
+    };
+    stick.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      if (stickPid !== null) return;               // 单摇杆：忽略第二根手指
+      stickPid = e.pointerId;
+      try { stick.setPointerCapture(e.pointerId); } catch (err) { /* 部分环境无活动指针 */ }
+      setStick(e);
+    });
+    // window 级监听：即使 setPointerCapture 失败，拖拽出摇杆区域也能持续跟踪
+    window.addEventListener('pointermove', e => { if (e.pointerId === stickPid) { e.preventDefault(); setStick(e); } }, { passive: false });
+    window.addEventListener('pointerup', stickEnd);
+    window.addEventListener('pointercancel', stickEnd);
 
     const mkBtn = (cls, label, acts) => {
       const b = document.createElement('div');
       b.className = 'tbtn ' + cls; b.textContent = label;
-      b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); b.setPointerCapture(e.pointerId); acts.forEach(a => this.btnQ[0].push(a)); });
+      b.addEventListener('pointerdown', e => {
+        e.preventDefault(); b.classList.add('on');
+        try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        acts.forEach(a => this.btnQ[0].push(a));
+      });
       const off = () => b.classList.remove('on');
       b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off);
       R.appendChild(b);
