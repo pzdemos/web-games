@@ -19,9 +19,13 @@ body {
 }
 
 /* ---------- 触控（仅触摸设备显示） ---------- */
-#touchL, #touchR { position: fixed; bottom: 0; height: 46%; width: 44%; display: none; z-index: 20; }
+/* 关键：容器 pointer-events:none，只有摇杆/按键本身可交互，
+   否则巨大透明 div 会挡住下方画布按钮（开始/暂停/选人）导致手机无法点击 */
+#touchL, #touchR { position: fixed; bottom: 0; height: 46%; width: 44%; display: none; z-index: 20; pointer-events: none; }
 body.touch #touchL, body.touch #touchR { display: block; }
 body.touch #game { border-radius: 0; }
+.stick { pointer-events: auto; }
+.tbtn { pointer-events: auto; }
 
 .stick {
   position: absolute; left: 12%; bottom: 10%;
@@ -56,3 +60,19 @@ body.touch #game { border-radius: 0; }
 .b-sp.s1 { right: 210px; bottom: 60px; background: rgba(255,140,40,.24); }
 .b-sp.s2 { right: 176px; bottom: 132px; background: rgba(255,90,120,.22); }
 .b-sp.su { right: 250px; bottom: 6px;   background: rgba(255,215,70,.26); border-color: rgba(255,215,70,.5); }
+
+/* 竖屏旋转提示（触屏设备竖持时） */
+#rotateHint {
+  display: none; position: fixed; inset: 0; z-index: 99;
+  background: rgba(10,5,4,.92); color: #f4e4cc;
+  flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  font-size: 17px; font-weight: 700; letter-spacing: 2px; text-align: center; padding: 30px;
+}
+@media (orientation: portrait) {
+  body.touch #rotateHint { display: flex; }
+}
+#rotateHint .phone {
+  width: 54px; height: 92px; border: 4px solid #ffb52a; border-radius: 10px;
+  animation: rot 1.6s ease-in-out infinite;
+}
+@keyframes rot { 0%,20% { transform: rotate(0); } 55%,80% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
