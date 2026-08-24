@@ -324,6 +324,7 @@ function startFight() {
     ? ['easy', 'easy', 'normal', 'normal', 'hard'][Math.min(4, Math.max(0, match.arcadeIdx))]
     : difficulty;
   ai = f2.controller === 'cpu' ? makeAI(diffRamp) : null;
+  im.p1Arrows = f2.controller === 'cpu';  // 单人模式方向键/小键盘也控 P1
   world = {
     f1, f2, projectiles: [], t: 0, timer: 60 * 60, round: 1,
     roundState: 'intro', stateT: 0, shake: 0, hitstop: 0, slowmoT: 0,

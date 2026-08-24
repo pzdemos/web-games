@@ -20,6 +20,7 @@ export class InputManager {
     this.touchBtn = {};          // 触屏攻击/必杀键状态
     this.tickN = 0;
     this.clicks = [];            // 画布点击事件 {x,y}（逻辑坐标）
+    this.p1Arrows = false;       // 单人模式下方向键/小键盘也映射到 P1（P2 由 CPU 接管时启用）
 
     window.addEventListener('keydown', e => {
       if (e.repeat) return;
@@ -110,6 +111,13 @@ export class InputManager {
     const map = i === 0 ? P1_KEYS : P2_KEYS;
     let l = this.keys.has(map.left), r = this.keys.has(map.right);
     let u = this.keys.has(map.up), d = this.keys.has(map.down);
+    if (i === 0 && this.p1Arrows) {
+      // 单人模式：方向键也控制 P1
+      l = l || this.keys.has(P2_KEYS.left);
+      r = r || this.keys.has(P2_KEYS.right);
+      u = u || this.keys.has(P2_KEYS.up);
+      d = d || this.keys.has(P2_KEYS.down);
+    }
     if (i === 0 && this.stick.active) {
       const dz = 0.34;
       if (this.stick.x < -dz) l = true; else if (this.stick.x > dz) r = true;
@@ -121,6 +129,11 @@ export class InputManager {
   // 每个逻辑 tick 调用一次；facing: 1 面向右 / -1 面向左（用于指令相对化）
   tick(facings) {
     this.tickN++;
+    // 单人模式：P2 键位（小键盘）也投递给 P1
+    if (this.p1Arrows && this.btnQ[1].length) {
+      this.btnQ[0].push(...this.btnQ[1]);
+      this.btnQ[1].length = 0;
+    }
     const out = [];
     for (let i = 0; i < 2; i++) {
       const dirs = this._dirs(i);
