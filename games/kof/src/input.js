@@ -86,9 +86,17 @@ export class InputManager {
     window.addEventListener('pointerup', stickEnd);
     window.addEventListener('pointercancel', stickEnd);
 
-    const mkBtn = (cls, label, acts) => {
+    const mkBtn = (cls, label, acts, hasCd) => {
       const b = document.createElement('div');
-      b.className = 'tbtn ' + cls; b.textContent = label;
+      b.className = 'tbtn ' + cls;
+      const lab = document.createElement('span'); lab.textContent = label;
+      b.appendChild(lab);
+      let mask = null, num = null;
+      if (hasCd) {
+        mask = document.createElement('div'); mask.className = 'cdmask';
+        num = document.createElement('div'); num.className = 'cdnum'; num.style.display = 'none';
+        b.appendChild(mask); b.appendChild(num);
+      }
       b.addEventListener('pointerdown', e => {
         e.preventDefault(); b.classList.add('on');
         try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
@@ -97,14 +105,36 @@ export class InputManager {
       const off = () => b.classList.remove('on');
       b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off);
       R.appendChild(b);
+      return b;
     };
     mkBtn('b-atk lp', '轻拳', ['lp']);
     mkBtn('b-atk hp', '重拳', ['hp']);
     mkBtn('b-atk lk', '轻脚', ['lk']);
     mkBtn('b-atk hk', '重脚', ['hk']);
-    mkBtn('b-sp s1', '必杀1', ['sp1']);
-    mkBtn('b-sp s2', '必杀2', ['sp2']);
-    mkBtn('b-sp su', '超杀', ['su']);
+    this.btnSp1 = mkBtn('b-sp s1', 'S1', ['sp1'], true);
+    this.btnSp2 = mkBtn('b-sp s2', 'S2', ['sp2'], true);
+    this.btnSu  = mkBtn('b-sp su', 'EX', ['su'], true);
+  }
+
+  // 同步触屏技能 CD 显示（战斗中每帧调用）
+  updateSkillCD(f) {
+    if (!this.btnSp1 || !f) return;
+    const set = (el, cd, max, ready) => {
+      if (!el) return;
+      const mask = el.querySelector('.cdmask'), num = el.querySelector('.cdnum');
+      if (cd > 0) {
+        el.style.setProperty('--p', Math.ceil(cd / max * 100));
+        if (num) { num.style.display = 'grid'; num.textContent = Math.ceil(cd / 60); }
+        el.classList.remove('ready');
+      } else {
+        el.style.setProperty('--p', 0);
+        if (num) { num.style.display = 'none'; num.textContent = ''; }
+        el.classList.toggle('ready', !!ready);
+      }
+    };
+    set(this.btnSp1, f.cd1, (f.char.sp1 && f.char.sp1.cd) || 100, true);
+    set(this.btnSp2, f.cd2, (f.char.sp2 && f.char.sp2.cd) || 140, true);
+    set(this.btnSu, 0, 1, f.gauge >= 100);
   }
 
   _dirs(i) {

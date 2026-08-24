@@ -115,6 +115,7 @@ function frame(ts) {
   switch (scene) {
     case 'loading': scLoading(); break;
     case 'title': scTitle(menu, clicks); break;
+    case 'help': scHelp(menu, clicks); break;
     case 'mode': scMode(menu, clicks); break;
     case 'select': scSelect(clicks); break;
     case 'vs': scVs(); break;
@@ -145,6 +146,63 @@ function scLoading() {
   roundRectPath(330, 310, Math.max(8, 300 * loadProgress), 12, 6); ctx.fill();
 }
 
+// ---------- 操作说明 ----------
+function scHelp(menu, clicks) {
+  ctx.fillStyle = '#0c0705'; ctx.fillRect(0, 0, 960, 540);
+  drawStage(ctx, 'dojo', sceneT / 16.7);
+  ctx.fillStyle = 'rgba(8,4,3,.86)'; ctx.fillRect(0, 0, 960, 540);
+  bigText('操作说明', 480, 50, 42, '#fff6dd', '#ff841f');
+
+  const colL = 250, colR = 710;
+  const box = (x, y, w, h, title) => {
+    roundRectPath(x, y, w, h, 10);
+    ctx.fillStyle = 'rgba(28,18,14,.6)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,214,150,.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#ffd88a'; ctx.font = '800 16px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(title, x + w / 2, y + 10);
+  };
+  const line = (x, y, txt, hl) => {
+    ctx.fillStyle = hl ? '#ffe28a' : '#d8c4a8'; ctx.font = (hl ? '800 ' : '600 ') + '14px ' + FONT;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(txt, x, y);
+  };
+  const kbd = (x, y, k) => {
+    ctx.fillStyle = 'rgba(255,240,220,.12)'; roundRectPath(x - 14, y - 3, 28, 20, 4); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,240,220,.3)'; ctx.stroke();
+    ctx.fillStyle = '#f4e4cc'; ctx.font = '700 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(k, x, y + 8);
+  };
+
+  // P1 / P2 键位
+  box(colL - 200, 88, 400, 148, 'P1 键位（默认）');
+  kbd(colL - 140, 120, 'W'); kbd(colL - 100, 140, 'A'); kbd(colL - 60, 120, 'S'); kbd(colL - 20, 140, 'D');
+  line(colL + 60, 122, '移动 / 跳 / 蹲');
+  kbd(colL - 120, 180, 'J'); kbd(colL - 80, 180, 'K'); kbd(colL - 40, 180, 'L'); kbd(colL, 180, 'U');
+  line(colL + 90, 182, '轻拳 重拳 轻脚 重脚');
+  line(colL, 210, '单人模式下方向键与小键盘也控制 P1', true);
+
+  box(colR - 200, 88, 400, 148, 'P2 键位（双人对战）');
+  kbd(colR - 140, 120, '↑'); kbd(colR - 100, 140, '←'); kbd(colR - 60, 120, '↓'); kbd(colR - 20, 140, '→');
+  line(colR + 60, 122, '移动 / 跳 / 蹲');
+  kbd(colR - 120, 180, '1'); kbd(colR - 80, 180, '2'); kbd(colR - 40, 180, '4'); kbd(colR, 180, '5');
+  line(colR + 105, 182, '小键盘 轻拳/重拳/轻脚/重脚');
+
+  // 搓招
+  box(130, 252, 700, 138, '必杀技（有冷却 · 看血条下方 S1 / S2 图标）');
+  line(330, 292, '↓ ↘ → + 拳', true); line(620, 292, '必杀1 · 弹道 · CD 1.7秒');
+  line(330, 322, '→ ↓ ↘ + 拳', true); line(620, 322, '必杀2 · 升龙对空 · CD 2.3秒');
+  line(330, 354, '↓ ↘ → ↓ ↘ → + 重拳', true); line(620, 354, '超必杀 · 气槽 MAX 时可用');
+
+  // 系统
+  line(480, 408, '防御：按住后方向（下段攻击须蹲防） · 前冲：按住前 · 后撤步：快速两下后');
+  line(480, 432, '气槽：互殴积攒 · 三局两胜 · 时间到血多者胜 · 触屏右侧有技能实体键（带 CD 转圈）');
+
+  const bb = { x: 400, y: 460, w: 160, h: 44, label: '返回 (Esc)', fs: 16, cb: () => go('title') };
+  buttons.push(bb); drawBtn(bb, false);
+  handleBtnClicks(clicks);
+  if (menu.includes('back') || menu.includes('ok')) go('title');
+}
+
 // ---------- 标题 ----------
 function scTitle(menu, clicks) {
   bgm('menu');
@@ -163,8 +221,10 @@ function scTitle(menu, clicks) {
   ctx.fillText('必杀 ↓↘→+拳 · 升龙 →↓↘+拳 · 超必杀 ↓↘→↓↘→+重拳（气槽 MAX）', 480, 282);
   ctx.fillText('角色：戴维斯 · 迪普 · 菲伦 · 丹尼斯 · 伍迪 · 路易斯', 480, 306);
 
-  const b = { x: 355, y: 335, w: 250, h: 56, label: '按任意键 / 点击开始', primary: true, fs: 17, cb: () => go('mode') };
+  const b = { x: 295, y: 335, w: 185, h: 56, label: '按任意键 / 点击开始', primary: true, fs: 16, cb: () => go('mode') };
   buttons.push(b); drawBtn(b, sceneT % 900 < 500);
+  const hb = { x: 492, y: 335, w: 173, h: 56, label: '⌨ 操作说明', fs: 17, cb: () => go('help') };
+  buttons.push(hb); drawBtn(hb, false);
   if (menu.length || clicks.length) go('mode');
 
   ctx.font = `500 12px ${FONT}`; ctx.fillStyle = 'rgba(255,240,220,.38)'; ctx.textAlign = 'center';
@@ -630,6 +690,7 @@ function scResult(menu, clicks) {
 // ---------- 战斗渲染 ----------
 function renderFight() {
   const w = world;
+  im.updateSkillCD(w.f1);   // 同步触屏技能 CD 遮罩
   ctx.save();
   if (w.shake > 0.5) ctx.translate((Math.random() - .5) * w.shake * 1.6, (Math.random() - .5) * w.shake * 1.2);
   drawStage(ctx, w.stage, w.t);

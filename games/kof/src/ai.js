@@ -31,8 +31,8 @@ export function makeAI(level) {
         else this.blockT = 26;
         return inp;
       }
-      // 对空升龙
-      if (!foe.onGround && adx < 170 && f.onGround && Math.random() < L.react * 0.4 && this.cool <= 0) {
+      // 对空升龙（受 CD 限制）
+      if (!foe.onGround && adx < 170 && f.onGround && f.cd2 <= 0 && Math.random() < L.react * 0.4 && this.cool <= 0) {
         inp.sp2 = true; this.cool = 40; return inp;
       }
 
@@ -43,7 +43,7 @@ export function makeAI(level) {
           f.atk.chained = true;
           if (Math.random() < 0.4 && f.gauge >= 100) inp.su = true;
           else if (adx < 120) inp.hp = true;
-          else inp.sp1 = true;
+          else if (f.cd1 <= 0) inp.sp1 = true;
         }
         if (f.state === 'jump' && !f.airAtkDone && adx < 160 && foe.onGround && Math.random() < 0.15) inp.hp = true;
         return inp;
@@ -74,7 +74,7 @@ export function makeAI(level) {
           break;
         case 'jumpWait': if (!f.onGround && f.vy > -3 && !f.airAtkDone) { inp.hp = true; this.plan = 'wait'; } if (f.onGround && this.planT > 10) this.plan = 'wait'; break;
         case 'proj':
-          if (this.cool <= 0) { inp.sp1 = true; this.cool = 50 + Math.random() * 40; this.plan = 'wait'; }
+          if (this.cool <= 0 && f.cd1 <= 0) { inp.sp1 = true; this.cool = 50 + Math.random() * 40; this.plan = 'wait'; }
           else inp[toward] = true;
           break;
         case 'super':

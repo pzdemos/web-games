@@ -31,6 +31,7 @@ export class Fighter {
     this.runT = 0; this.walkPh = 0; this.landLag = 0;
     this.airAtkDone = false; this.bodyFlame = 0; this.atkGlow = null; this.atkArc = null;
     this.crouching = false; this.holdBack = false; this.comboN = 0;
+    this.cd1 = 0; this.cd2 = 0;   // 技能冷却（帧）
     this.pose = { ...P.idle };
   }
 
@@ -64,8 +65,14 @@ export class Fighter {
 
   tryAttack(inp, world) {
     const airborne = !this.onGround;
-    if (inp.sp1) { this.startSpecial(this.char.sp1, world); return true; }
-    if (inp.sp2) { this.startSpecial(this.char.sp2, world); return true; }
+    if (inp.sp1) {
+      if (this.cd1 <= 0) { this.startSpecial(this.char.sp1, world); this.cd1 = this.char.sp1.cd || 100; }
+      return true;
+    }
+    if (inp.sp2) {
+      if (this.cd2 <= 0) { this.startSpecial(this.char.sp2, world); this.cd2 = this.char.sp2.cd || 140; }
+      return true;
+    }
     if (inp.su && this.gauge >= 100) { this.startSuper(world); return true; }
     let key = null;
     if (inp.lp) key = airborne ? 'j.lp' : (inp.d ? 'c.lp' : 'lp');
@@ -115,6 +122,8 @@ export class Fighter {
     this.stateT++;
     this.animT = (this.animT || 0) + 1;
     if (this.invuln > 0) this.invuln--;
+    if (this.cd1 > 0) this.cd1--;
+    if (this.cd2 > 0) this.cd2--;
     const fwd = this.facing === 1 ? inp.r : inp.l;
     const back = this.facing === 1 ? inp.l : inp.r;
     this.crouching = false;

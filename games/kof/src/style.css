@@ -28,38 +28,55 @@ body.touch #game { border-radius: 0; }
 .tbtn { pointer-events: auto; }
 
 .stick {
-  position: absolute; left: 12%; bottom: 10%;
-  width: 118px; height: 118px; border-radius: 50%;
-  background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.14);
+  position: absolute; left: 10%; bottom: 8%;
+  width: 132px; height: 132px; border-radius: 50%;
+  background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.16);
   backdrop-filter: blur(4px);
 }
 .stick .nub {
-  position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%;
+  position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #6a5648, #2c211b);
-  border: 1.5px solid rgba(255,255,255,.22);
+  border: 1.5px solid rgba(255,255,255,.24);
   transform: translate(-50%, -50%);
   transition: transform .06s;
 }
 .tbtn {
   position: absolute; border-radius: 50%;
   display: grid; place-items: center;
-  font-size: 12px; font-weight: 800; color: rgba(255,244,230,.9);
+  font-size: 13px; font-weight: 800; color: rgba(255,244,230,.95);
   letter-spacing: 1px;
-  border: 1.5px solid rgba(255,255,255,.18);
+  border: 1.5px solid rgba(255,255,255,.2);
   background: rgba(30,20,16,.55);
   backdrop-filter: blur(4px);
+  overflow: hidden;
 }
 .tbtn:active, .tbtn.on { filter: brightness(1.9); }
-#touchR { width: 46%; }
-.b-atk  { width: 58px; height: 58px; }
-.b-sp   { width: 44px; height: 44px; font-size: 10px; }
-.b-atk.lp { right: 118px; bottom: 118px; background: rgba(200,150,90,.28); }
-.b-atk.hp { right: 22px;  bottom: 92px;  background: rgba(210,80,60,.30); }
-.b-atk.lk { right: 128px; bottom: 34px;  background: rgba(120,170,120,.26); }
-.b-atk.hk { right: 40px;  bottom: 8px;   background: rgba(110,140,200,.26); }
-.b-sp.s1 { right: 210px; bottom: 60px; background: rgba(255,140,40,.24); }
-.b-sp.s2 { right: 176px; bottom: 132px; background: rgba(255,90,120,.22); }
-.b-sp.su { right: 250px; bottom: 6px;   background: rgba(255,215,70,.26); border-color: rgba(255,215,70,.5); }
+/* 标准格斗布局：右侧 2×2 攻击 + 内侧技能竖排 + 独立超杀 */
+.b-atk    { width: 62px; height: 62px; }
+.b-atk.lp { right: 98px;  bottom: 102px; background: rgba(200,150,90,.30); }
+.b-atk.hp { right: 18px;  bottom: 102px; background: rgba(210,80,60,.32); }
+.b-atk.lk { right: 98px;  bottom: 20px;  background: rgba(120,170,120,.28); }
+.b-atk.hk { right: 18px;  bottom: 20px;  background: rgba(110,140,200,.28); }
+.b-sp   { width: 48px; height: 48px; font-size: 12px; }
+.b-sp.s1 { right: 176px; bottom: 102px; background: rgba(255,140,40,.26); }
+.b-sp.s2 { right: 176px; bottom: 20px;  background: rgba(255,90,120,.24); }
+.b-sp.su { right: 238px; bottom: 58px; width: 68px; height: 68px; font-size: 14px;
+  background: rgba(255,215,70,.28); border-color: rgba(255,215,70,.55); }
+/* CD 遮罩（conic 进度，JS 更新 --p） */
+.tbtn .cdmask {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(rgba(6,4,3,.85) calc(var(--p, 0) * 1%), transparent 0);
+}
+.tbtn .cdnum {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 15px; font-weight: 900; color: #f4e4cc; pointer-events: none;
+  text-shadow: 0 1px 3px #000;
+}
+.tbtn.ready.su, .tbtn.ready.b-sp.su { animation: supulse 0.9s ease-in-out infinite; }
+@keyframes supulse {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255,215,70,.5); }
+  50% { box-shadow: 0 0 20px 5px rgba(255,215,70,.9); }
+}
 
 /* 竖屏旋转提示（触屏设备竖持时） */
 #rotateHint {

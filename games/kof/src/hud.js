@@ -82,6 +82,40 @@ function drawSide(ctx, f, side, world, t) {
     ctx.fillText('MAX', side === 0 ? gx + gw + 8 : gx - 8, gy - 1);
   }
   ctx.restore();
+
+  // 技能 CD 图标（气槽内侧：S1 / S2 / 超杀）
+  const iw = 30, gap = 8;
+  const ix0 = side === 0 ? gx + gw + 34 : gx - 34 - iw * 3 - gap * 2;
+  for (let i = 0; i < 3; i++) {
+    const x = ix0 + i * (iw + gap), y = gy - 10;
+    const cdMax = i === 0 ? (f.char.sp1.cd || 100) : i === 1 ? (f.char.sp2.cd || 140) : 0;
+    const cd = i === 0 ? f.cd1 : i === 1 ? f.cd2 : 0;
+    const ready = i < 2 ? cd <= 0 : f.gauge >= 100;
+    ctx.save();
+    roundRect(ctx, x, y, iw, iw, 6);
+    ctx.fillStyle = ready ? (i === 2 ? 'rgba(255,190,40,.92)' : 'rgba(70,50,30,.9)') : 'rgba(18,12,10,.85)';
+    ctx.fill();
+    ctx.strokeStyle = ready ? (i === 2 ? '#ffe28a' : '#c8a86a') : 'rgba(200,180,140,.3)';
+    ctx.lineWidth = 1.5; ctx.stroke();
+    if (i === 2 && ready && t % 14 < 7) { ctx.strokeStyle = '#fff'; ctx.stroke(); }
+    // CD 遮罩（扇形）
+    if (i < 2 && cd > 0) {
+      const frac = cd / cdMax;
+      ctx.fillStyle = 'rgba(0,0,0,.72)';
+      ctx.beginPath();
+      ctx.moveTo(x + iw / 2, y + iw / 2);
+      ctx.arc(x + iw / 2, y + iw / 2, iw * 0.75, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f4e4cc';
+      ctx.font = '900 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(Math.ceil(cd / 60), x + iw / 2, y + iw / 2 + 1);
+    } else {
+      ctx.fillStyle = ready ? '#2a1800' : '#a89478';
+      ctx.font = '900 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(i === 2 ? 'EX' : 'S' + (i + 1), x + iw / 2, y + iw / 2 + 1);
+    }
+    ctx.restore();
+  }
 }
 
 function bar(ctx, BW, skew, pct) {
