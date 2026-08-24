@@ -97,6 +97,7 @@ function handleBtnClicks(clicks) {
 }
 function go(s) {
   scene = s; sceneT = 0; sfx('confirm');
+  document.body.classList.remove('kof-paused');
   if (s !== 'fight') acc = 0;
   if (s === 'select') { sel.p1Done = false; sel.p2Done = false; sel.readyT = 0; }
 }
@@ -218,17 +219,16 @@ function scTitle(menu, clicks) {
   ctx.restore();
   bigText('KOF · WEB 巅峰对决', 480, 232, 30, '#ffe28a', '#ff9a3a', 6);
   ctx.font = `600 14px ${FONT}`; ctx.fillStyle = '#c8b49a'; ctx.textAlign = 'center';
-  ctx.fillText('必杀 ↓↘→+拳 · 升龙 →↓↘+拳 · 超必杀 ↓↘→↓↘→+重拳（气槽 MAX）', 480, 282);
-  ctx.fillText('角色：戴维斯 · 迪普 · 菲伦 · 丹尼斯 · 伍迪 · 路易斯', 480, 306);
+  ctx.fillText('必杀 ↓↘→+拳 · 升龙 →↓↘+拳 · 超必杀 ↓↘→↓↘→+重拳（气槽 MAX）', 480, 278);
 
-  const b = { x: 295, y: 335, w: 185, h: 56, label: '按任意键 / 点击开始', primary: true, fs: 16, cb: () => go('mode') };
+  const b = { x: 295, y: 326, w: 185, h: 56, label: '开始游戏', primary: true, fs: 20, cb: () => go('mode') };
   buttons.push(b); drawBtn(b, sceneT % 900 < 500);
-  const hb = { x: 492, y: 335, w: 173, h: 56, label: '⌨ 操作说明', fs: 17, cb: () => go('help') };
+  const hb = { x: 492, y: 326, w: 173, h: 56, label: '⌨ 操作说明', fs: 17, cb: () => go('help') };
   buttons.push(hb); drawBtn(hb, false);
   if (menu.length || clicks.length) go('mode');
 
   ctx.font = `500 12px ${FONT}`; ctx.fillStyle = 'rgba(255,240,220,.38)'; ctx.textAlign = 'center';
-  ctx.fillText('同人非商用复刻 · 角色动画素材来自开源游戏 Little Fighter 2（© Marti Wong & Starsky Wong）· M 静音', 480, 504);
+  ctx.fillText('同人非商用 · 角色素材：Little Fighter 2（Marti Wong）· M 静音', 480, 466);
 }
 
 // ---------- 模式选择 ----------
@@ -250,7 +250,7 @@ function scMode(menu, clicks) {
     const b = { x: 290, y: 140 + i * 74, w: 380, h: 58, label: it.label, primary: i < 3, fs: 18, cb: it.cb };
     buttons.push(b); drawBtn(b, false);
   });
-  const kb = { x: 290, y: 444, w: 380, h: 44, label: '键位说明：P1 WASD+J/K/L/U · P2 方向键+小键盘1254 · M 静音', fs: 12.5, cb: () => {} };
+  const kb = { x: 290, y: 444, w: 380, h: 44, label: '键位：P1 WASD+JKLU · P2 方向键+小键盘 · 详见操作说明', fs: 12, cb: () => go('help') };
   buttons.push(kb); drawBtn(kb, false);
   handleBtnClicks(clicks);
   if (menu.includes('back')) go('title');
@@ -264,7 +264,7 @@ function scSelect(clicks) {
   ctx.fillStyle = 'rgba(6,4,10,.74)'; ctx.fillRect(0, 0, 960, 540);
   bigText('选择你的斗士', 480, 40, 38, '#fff6dd', '#ff841f');
 
-  const cw = 236, chh = 176, gx = 132, gy = 72;
+  const cw = 236, chh = 182, gx = 110, gy = 70;
   const cells = [];
   CHARS.forEach((c, i) => {
     const col = i % 3, row = (i / 3) | 0;
@@ -279,11 +279,11 @@ function scSelect(clicks) {
     ctx.strokeStyle = hot1 ? '#ff841f' : hot2 ? '#5a9aff' : 'rgba(255,220,160,.15)';
     if ((hot1 || hot2) && sceneT % 700 < 400) ctx.strokeStyle = '#ffd23a';
     ctx.stroke();
-    drawBust(ctx, c, x + cw / 2 - 26, y + 96, 0.98, sceneT / 30, (hot1 || hot2) && sel.p1Done !== null ? 'fierce' : null);
+    drawBust(ctx, c, x + cw / 2, y + 86, 0.82, sceneT / 30, (hot1 || hot2) && sel.p1Done !== null ? 'fierce' : null);
     ctx.font = `800 18px ${FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = '#f8ecd8';
-    ctx.fillText(c.name, x + cw / 2, y + chh - 26);
+    ctx.fillText(c.name, x + cw / 2, y + 156);
     ctx.font = '700 10px sans-serif'; ctx.fillStyle = '#a89880';
-    ctx.fillText(`${c.en} · ${c.title}`, x + cw / 2, y + chh - 10);
+    ctx.fillText(`${c.en} · ${c.title}`, x + cw / 2, y + 172);
 
     clicks.forEach(cl => {
       if (cl.x >= x && cl.x <= x + cw && cl.y >= y && cl.y <= y + chh) {
@@ -327,21 +327,21 @@ function scSelect(clicks) {
   const hint = !sel.p1Done ? 'P1：WASD/方向键移动 · J/点击确认 · K 返回'
     : p2phase ? 'P2：方向键移动 · 小键盘1确认 · 2返回'
     : sel.p1Done && sel.p2Done ? '开始对战…' : '准备对战…';
-  ctx.fillText(hint, 480, 462);
+  ctx.fillText(hint, 480, 458);
 
   // 招式表
   ctx.font = '700 13px sans-serif'; ctx.fillStyle = '#e8c88a'; ctx.textAlign = 'center';
-  ctx.fillText(`${fc.name}：${fc.sp1.name}（↓↘→+拳）· ${fc.sp2.name}（→↓↘+拳）· ${fc.super.name}（超杀）`, 480, 486);
+  ctx.fillText(`${fc.name}：${fc.sp1.name}（↓↘→+拳）· ${fc.sp2.name}（→↓↘+拳）· ${fc.super.name}（超杀）`, 480, 482, 780);
   // 数据条
   const bars = [['力量', fc.atk * 6.8], ['速度', fc.walk * 2.1], ['防御', (2.1 - fc.def) * 6.8], ['体力', fc.hp / 165]];
   bars.forEach(([lab, v], i) => {
     const x = 210 + i * 145;
     ctx.fillStyle = '#c8b49a'; ctx.font = '700 12px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(lab, x - 32, 524);
+    ctx.fillText(lab, x - 32, 516);
     ctx.fillStyle = 'rgba(255,255,255,.1)';
-    roundRectPath(x - 14, 511, 84, 9, 4); ctx.fill();
+    roundRectPath(x - 14, 503, 84, 9, 4); ctx.fill();
     ctx.fillStyle = '#ffb52a';
-    roundRectPath(x - 14, 511, Math.max(6, Math.min(84, 84 * v / 10)), 9, 4); ctx.fill();
+    roundRectPath(x - 14, 503, Math.max(6, Math.min(84, 84 * v / 10)), 9, 4); ctx.fill();
   });
 
   // 双方就绪 → 延迟进入 VS
@@ -421,6 +421,7 @@ function scFight(dt, menu, clicks) {
   if (menu.includes('pause')) paused = !paused;
   else if (menu.includes('back')) paused = true;
   if (menu.includes('mute')) toggleMute();
+  document.body.classList.toggle('kof-paused', !!paused);
 
   if (!paused) {
     acc += dt * (world.slowmoT > 0 ? 0.32 : 1);

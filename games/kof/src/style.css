@@ -19,16 +19,19 @@ body {
 }
 
 /* ---------- 触控（仅触摸设备显示） ---------- */
-/* 关键：容器 pointer-events:none，只有摇杆/按键本身可交互，
-   否则巨大透明 div 会挡住下方画布按钮（开始/暂停/选人）导致手机无法点击 */
-#touchL, #touchR { position: fixed; bottom: 0; height: 46%; width: 44%; display: none; z-index: 20; pointer-events: none; }
+/* 关键：容器 pointer-events:none，只有摇杆/按键本身可交互；
+   必须显式贴边定位（fixed 无 left/right 时会停在文档流静态位置，导致按钮悬在画布中部） */
+#touchL { position: fixed; left: 0; bottom: 0; height: 46%; width: 40%; display: none; z-index: 20; pointer-events: none; }
+#touchR { position: fixed; right: 0; bottom: 0; height: 46%; width: 44%; display: none; z-index: 20; pointer-events: none; }
 body.touch #touchL, body.touch #touchR { display: block; }
 body.touch #game { border-radius: 0; }
 .stick { pointer-events: auto; }
 .tbtn { pointer-events: auto; }
+/* 暂停/菜单时触屏控件淡化并禁用，避免遮挡画布菜单 */
+body.kof-paused .stick, body.kof-paused .tbtn { pointer-events: none !important; opacity: .18; }
 
 .stick {
-  position: absolute; left: 10%; bottom: 8%;
+  position: absolute; left: 14px; bottom: 14px;
   width: 132px; height: 132px; border-radius: 50%;
   background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.16);
   backdrop-filter: blur(4px);

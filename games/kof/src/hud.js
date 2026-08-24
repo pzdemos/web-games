@@ -83,11 +83,11 @@ function drawSide(ctx, f, side, world, t) {
   }
   ctx.restore();
 
-  // 技能 CD 图标（气槽内侧：S1 / S2 / 超杀）
-  const iw = 30, gap = 8;
-  const ix0 = side === 0 ? gx + gw + 34 : gx - 34 - iw * 3 - gap * 2;
+  // 技能 CD 图标（气槽正上方一排，与气槽对齐，不再挤在画面中央）
+  const iw = 26, gap = 6;
+  const ix0 = side === 0 ? gx : gx + gw - (iw * 3 + gap * 2);
   for (let i = 0; i < 3; i++) {
-    const x = ix0 + i * (iw + gap), y = gy - 10;
+    const x = ix0 + i * (iw + gap), y = gy - 33;
     const cdMax = i === 0 ? (f.char.sp1.cd || 100) : i === 1 ? (f.char.sp2.cd || 140) : 0;
     const cd = i === 0 ? f.cd1 : i === 1 ? f.cd2 : 0;
     const ready = i < 2 ? cd <= 0 : f.gauge >= 100;
