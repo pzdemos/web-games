@@ -54,17 +54,25 @@ body.kof-paused .stick, body.kof-paused .tbtn { pointer-events: none !important;
   overflow: hidden;
 }
 .tbtn:active, .tbtn.on { filter: brightness(1.9); }
-/* 标准格斗布局：右侧 2×2 攻击 + 内侧技能竖排 + 独立超杀 */
-.b-atk    { width: 62px; height: 62px; }
-.b-atk.lp { right: 98px;  bottom: 102px; background: rgba(200,150,90,.30); }
-.b-atk.hp { right: 18px;  bottom: 102px; background: rgba(210,80,60,.32); }
-.b-atk.lk { right: 98px;  bottom: 20px;  background: rgba(120,170,120,.28); }
-.b-atk.hk { right: 18px;  bottom: 20px;  background: rgba(110,140,200,.28); }
-.b-sp   { width: 48px; height: 48px; font-size: 12px; }
-.b-sp.s1 { right: 176px; bottom: 102px; background: rgba(255,140,40,.26); }
-.b-sp.s2 { right: 176px; bottom: 20px;  background: rgba(255,90,120,.24); }
-.b-sp.su { right: 238px; bottom: 58px; width: 68px; height: 68px; font-size: 14px;
-  background: rgba(255,215,70,.28); border-color: rgba(255,215,70,.55); }
+/* 标准格斗手游布局：右下 2×2 攻击阵 + 技能半圆环弧线（以攻击群中心为圆心，S2-S1-EX 沿弧分布） */
+.b-atk    { width: 60px; height: 60px; }
+.b-atk.lp { right: 96px;  bottom: 96px; background: rgba(200,150,90,.30); }
+.b-atk.hp { right: 16px;  bottom: 16px;  background: rgba(210,80,60,.34); }
+.b-atk.lk { right: 96px;  bottom: 16px;  background: rgba(120,170,120,.28); }
+.b-atk.hk { right: 16px;  bottom: 96px;  background: rgba(110,140,200,.28); }
+.b-sp   { width: 54px; height: 54px; font-size: 13px; }
+/* 弧心(86,86) 半径 136：S2=内侧(180°) S1=左上(135°) EX=正上(90°) */
+.b-sp.s1 { right: 182px; bottom: 182px; background: rgba(255,140,40,.30); }
+.b-sp.s2 { right: 222px; bottom: 86px;  background: rgba(255,90,120,.28); }
+.b-sp.su { right: 86px;  bottom: 222px; width: 72px; height: 72px; font-size: 15px;
+  background: rgba(255,215,70,.30); border-color: rgba(255,215,70,.55); }
+/* 半圆环辅助弧线：圆心对准技能弧(95,100)，半径136，显示左上弧段 */
+.arc-ring {
+  position: absolute; right: -41px; bottom: -36px; width: 272px; height: 272px;
+  border-radius: 50%; pointer-events: none;
+  border: 1.5px dashed rgba(255,220,160,.15);
+  clip-path: inset(0 0 50% 50%); /* 只显示左上弧 */
+}
 /* CD 遮罩（conic 进度，JS 更新 --p） */
 .tbtn .cdmask {
   position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
@@ -72,13 +80,22 @@ body.kof-paused .stick, body.kof-paused .tbtn { pointer-events: none !important;
 }
 .tbtn .cdnum {
   position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 15px; font-weight: 900; color: #f4e4cc; pointer-events: none;
+  font-size: 17px; font-weight: 900; color: #f4e4cc; pointer-events: none;
   text-shadow: 0 1px 3px #000;
 }
+.tbtn span { pointer-events: none; }
 .tbtn.ready.su, .tbtn.ready.b-sp.su { animation: supulse 0.9s ease-in-out infinite; }
 @keyframes supulse {
   0%, 100% { box-shadow: 0 0 6px 1px rgba(255,215,70,.5); }
-  50% { box-shadow: 0 0 20px 5px rgba(255,215,70,.9); }
+  50% { box-shadow: 0 0 22px 6px rgba(255,215,70,.95); }
+}
+/* CD 未就绪按下：拒绝抖动 */
+.tbtn.deny { animation: denyshake .3s ease; }
+@keyframes denyshake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
 }
 
 /* 竖屏旋转提示（触屏设备竖持时） */

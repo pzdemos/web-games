@@ -90,6 +90,7 @@ export class Fighter {
 
   startSpecial(def, world) {
     sfx(def.kind === 'proj' || def.kind === 'wave' ? 'fire' : 'special');
+    FX.text(this.x, this.y - 200, def.name, this.char.col.flame, 22);   // 招式名浮字
     if (def.kind === 'proj' || def.kind === 'wave') {
       this.startAtk({ ...def, anim: 'cast', dmg: def.dmg, box: { ox: 30, oy: -130, w: 10, h: 10 }, startup: def.startup, active: 2, recover: def.recover, hitstun: 16, blockstun: 12, kb: def.kb, sfx: 'fire' }, def.kind);
     } else if (def.kind === 'riser') {

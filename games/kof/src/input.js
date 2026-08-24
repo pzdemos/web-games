@@ -86,19 +86,25 @@ export class InputManager {
     window.addEventListener('pointerup', stickEnd);
     window.addEventListener('pointercancel', stickEnd);
 
-    const mkBtn = (cls, label, acts, hasCd) => {
+    const mkBtn = (cls, label, acts, cdKey) => {
       const b = document.createElement('div');
       b.className = 'tbtn ' + cls;
       const lab = document.createElement('span'); lab.textContent = label;
       b.appendChild(lab);
-      let mask = null, num = null;
-      if (hasCd) {
-        mask = document.createElement('div'); mask.className = 'cdmask';
-        num = document.createElement('div'); num.className = 'cdnum'; num.style.display = 'none';
+      if (cdKey) {
+        const mask = document.createElement('div'); mask.className = 'cdmask';
+        const num = document.createElement('div'); num.className = 'cdnum'; num.style.display = 'none';
         b.appendChild(mask); b.appendChild(num);
       }
       b.addEventListener('pointerdown', e => {
-        e.preventDefault(); b.classList.add('on');
+        e.preventDefault();
+        // CD 未就绪：拒绝反馈（抖动+音效），不投递
+        if (cdKey && this._cdLocked && this._cdLocked[cdKey]) {
+          import('./sound.js').then(m => m.sfx('cancel'));
+          b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny');
+          return;
+        }
+        b.classList.add('on');
         try { b.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
         acts.forEach(a => this.btnQ[0].push(a));
       });
@@ -111,14 +117,16 @@ export class InputManager {
     mkBtn('b-atk hp', '重拳', ['hp']);
     mkBtn('b-atk lk', '轻脚', ['lk']);
     mkBtn('b-atk hk', '重脚', ['hk']);
-    this.btnSp1 = mkBtn('b-sp s1', 'S1', ['sp1'], true);
-    this.btnSp2 = mkBtn('b-sp s2', 'S2', ['sp2'], true);
-    this.btnSu  = mkBtn('b-sp su', 'EX', ['su'], true);
+    this.btnSp1 = mkBtn('b-sp s1', 'S1', ['sp1'], 's1');
+    this.btnSp2 = mkBtn('b-sp s2', 'S2', ['sp2'], 's2');
+    this.btnSu  = mkBtn('b-sp su', 'EX', ['su'], 'su');
+    const ring = document.createElement('div'); ring.className = 'arc-ring'; R.appendChild(ring);
   }
 
   // 同步触屏技能 CD 显示（战斗中每帧调用）
   updateSkillCD(f) {
     if (!this.btnSp1 || !f) return;
+    this._cdLocked = { s1: f.cd1 > 0, s2: f.cd2 > 0, su: f.gauge < 100 };
     const set = (el, cd, max, ready) => {
       if (!el) return;
       const mask = el.querySelector('.cdmask'), num = el.querySelector('.cdnum');
