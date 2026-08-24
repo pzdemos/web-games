@@ -1,0 +1,172 @@
+// 输入系统：键盘 P1/P2 + 触屏摇杆/按键 + 必杀指令(↓↘→ / →↓↘ / ↓↘→↓↘→)识别
+// 帧语义：每个逻辑 tick 调 tick()，方向为即时采样，按键为事件队列（不丢帧）
+
+const P1_KEYS = {
+  left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS',
+  lp: 'KeyJ', hp: 'KeyK', lk: 'KeyL', hk: 'KeyU'
+};
+const P2_KEYS = {
+  left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown',
+  lp: 'Numpad1', hp: 'Numpad2', lk: 'Numpad4', hk: 'Numpad5'
+};
+
+export class InputManager {
+  constructor() {
+    this.keys = new Set();
+    this.btnQ = [[], []];        // 每 tick 待投递的按键事件
+    this.dirHist = [[], []];     // 方向事件历史 {d:'l|r|u|d|n', t:tick}
+    this.menuQ = [];             // 菜单按键事件
+    this.stick = { active: false, x: 0, y: 0 };
+    this.touchBtn = {};          // 触屏攻击/必杀键状态
+    this.tickN = 0;
+    this.clicks = [];            // 画布点击事件 {x,y}（逻辑坐标）
+
+    window.addEventListener('keydown', e => {
+      if (e.repeat) return;
+      // 阻止方向键/空格滚动页面
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+      this.keys.add(e.code);
+      for (const [i, map] of [P1_KEYS, P2_KEYS].entries()) {
+        for (const act of ['lp', 'hp', 'lk', 'hk']) if (e.code === map[act]) this.btnQ[i].push(act);
+      }
+      if (['Enter', 'NumpadEnter', 'KeyJ'].includes(e.code)) this.menuQ.push('ok');
+      if (['Escape', 'KeyK', 'Backspace'].includes(e.code)) this.menuQ.push('back');
+      for (const c of ['ArrowUp', 'KeyW']) if (e.code === c) this.menuQ.push('up');
+      for (const c of ['ArrowDown', 'KeyS']) if (e.code === c) this.menuQ.push('down');
+      for (const c of ['ArrowLeft', 'KeyA']) if (e.code === c) this.menuQ.push('left');
+      for (const c of ['ArrowRight', 'KeyD']) if (e.code === c) this.menuQ.push('right');
+      if (e.code === 'KeyM') this.menuQ.push('mute');
+      if (e.code === 'KeyP') this.menuQ.push('pause');
+    });
+    window.addEventListener('keyup', e => this.keys.delete(e.code));
+    window.addEventListener('blur', () => this.keys.clear());
+
+    const coarse = ('ontouchstart' in window) || matchMedia('(pointer:coarse)').matches;
+    if (coarse) document.body.classList.add('touch');
+    this._initTouch();
+  }
+
+  // 画布点击（场景按钮命中），canvas 换算由 main 注入
+  onCanvasClick(logicalXY) { this.clicks.push(logicalXY); }
+  takeClicks() { const c = this.clicks; this.clicks = []; return c; }
+  takeMenu() { const q = this.menuQ; this.menuQ = []; return q; }
+
+  _initTouch() {
+    const L = document.getElementById('touchL'), R = document.getElementById('touchR');
+    const stick = document.createElement('div'); stick.className = 'stick';
+    const nub = document.createElement('div'); nub.className = 'nub';
+    stick.appendChild(nub); L.appendChild(stick);
+    const rectOf = () => stick.getBoundingClientRect();
+    const setStick = e => {
+      const r = rectOf();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      let dx = (e.clientX - cx) / (r.width / 2), dy = (e.clientY - cy) / (r.height / 2);
+      const m = Math.hypot(dx, dy);
+      if (m > 1) { dx /= m; dy /= m; }
+      this.stick.x = dx; this.stick.y = dy; this.stick.active = true;
+      nub.style.transform = `translate(calc(-50% + ${dx * 32}px), calc(-50% + ${dy * 32}px))`;
+    };
+    stick.addEventListener('pointerdown', e => { e.preventDefault(); stick.setPointerCapture(e.pointerId); setStick(e); });
+    stick.addEventListener('pointermove', e => { if (this.stick.active) { e.preventDefault(); setStick(e); } });
+    const stickEnd = e => { this.stick.active = false; this.stick.x = 0; this.stick.y = 0; nub.style.transform = 'translate(-50%,-50%)'; };
+    stick.addEventListener('pointerup', stickEnd);
+    stick.addEventListener('pointercancel', stickEnd);
+
+    const mkBtn = (cls, label, acts) => {
+      const b = document.createElement('div');
+      b.className = 'tbtn ' + cls; b.textContent = label;
+      b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); b.setPointerCapture(e.pointerId); acts.forEach(a => this.btnQ[0].push(a)); });
+      const off = () => b.classList.remove('on');
+      b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off);
+      R.appendChild(b);
+    };
+    mkBtn('b-atk lp', '轻拳', ['lp']);
+    mkBtn('b-atk hp', '重拳', ['hp']);
+    mkBtn('b-atk lk', '轻脚', ['lk']);
+    mkBtn('b-atk hk', '重脚', ['hk']);
+    mkBtn('b-sp s1', '必杀1', ['sp1']);
+    mkBtn('b-sp s2', '必杀2', ['sp2']);
+    mkBtn('b-sp su', '超杀', ['su']);
+  }
+
+  _dirs(i) {
+    const map = i === 0 ? P1_KEYS : P2_KEYS;
+    let l = this.keys.has(map.left), r = this.keys.has(map.right);
+    let u = this.keys.has(map.up), d = this.keys.has(map.down);
+    if (i === 0 && this.stick.active) {
+      const dz = 0.34;
+      if (this.stick.x < -dz) l = true; else if (this.stick.x > dz) r = true;
+      if (this.stick.y < -dz) u = true; else if (this.stick.y > dz) d = true;
+    }
+    return { l, r, u, d };
+  }
+
+  // 每个逻辑 tick 调用一次；facing: 1 面向右 / -1 面向左（用于指令相对化）
+  tick(facings) {
+    this.tickN++;
+    const out = [];
+    for (let i = 0; i < 2; i++) {
+      const dirs = this._dirs(i);
+      // 记录方向事件（变化才记）
+      const cur = dirs.l ? 'l' : dirs.r ? 'r' : dirs.d ? 'd' : dirs.u ? 'u' : 'n';
+      const hist = this.dirHist[i];
+      const last = hist.length ? hist[hist.length - 1].d : 'n';
+      if (cur !== last) hist.push({ d: cur, t: this.tickN });
+      while (hist.length && this.tickN - hist[0].t > 46) hist.shift();
+
+      // 按键事件 → 必杀指令匹配
+      let sp1 = false, sp2 = false, su = false;
+      const q = this.btnQ[i];
+      const rest = [];
+      for (const btn of q) {
+        if (btn === 'sp1' || btn === 'sp2' || btn === 'su') { // 触屏快捷键
+          if (btn === 'sp1') sp1 = true; else if (btn === 'sp2') sp2 = true; else su = true;
+          continue;
+        }
+        if ((btn === 'lp' || btn === 'hp') && !dirs.d) {
+          const m = this._matchMotion(hist, facings[i]);
+          if (m === 'super') { su = true; continue; }
+          if (m === 'sp2') { sp2 = true; continue; }
+          if (m === 'sp1') { sp1 = true; continue; }
+        }
+        rest.push(btn);
+      }
+      this.btnQ[i] = rest;
+
+      out.push({ ...dirs, lp: false, hp: false, lk: false, hk: false, sp1, sp2, su, _btns: rest });
+      // 按钮只在本 tick 投递一次
+      const o = out[out.length - 1];
+      for (const b of rest) o[b] = true;
+      this.btnQ[i] = [];
+    }
+    return out;
+  }
+
+  // 方向历史 → 相对方向(2/4/6/8)，匹配必杀指令
+  _matchMotion(hist, facing) {
+    const rel = [];
+    for (const ev of hist) {
+      let n = null;
+      if (ev.d === 'd') n = 2;
+      else if (ev.d === 'u') n = 8;
+      else if (ev.d === 'l') n = facing === 1 ? 4 : 6;
+      else if (ev.d === 'r') n = facing === 1 ? 6 : 4;
+      if (n && n !== 4 && rel[rel.length - 1] !== n) rel.push({ n, t: ev.t });
+    }
+    const win = (arr, span) => arr.length && arr[arr.length - 1].t - arr[0].t <= span;
+    const has = (seq, span) => {
+      // 尾部匹配子序列（允许中间插入无关上方向）
+      let idx = rel.length - 1;
+      for (let si = seq.length - 1; si >= 0; si--) {
+        while (idx >= 0 && rel[idx].n !== seq[si]) idx--;
+        if (idx < 0) return false;
+        idx--;
+      }
+      return win(rel.slice(idx + 1), span);
+    };
+    if (has([2, 6, 2, 6], 44)) return 'super';
+    if (has([6, 2, 6], 26)) return 'sp2';
+    if (has([2, 6], 24)) return 'sp1';
+    return null;
+  }
+}

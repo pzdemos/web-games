@@ -6,6 +6,7 @@
 
 | 游戏 | 包名 | 在线访问 | 构建产物 |
 |------|------|---------|---------|
+| 拳皇 KOF | `@wg/kof` | https://kof.haoaiganfan.top | `/var/www/kof` |
 | 贪吃蛇 | `@wg/snake` | https://snake.haoaiganfan.top | `/var/www/snake` |
 | 2048 | `@wg/game2048` | https://2048.haoaiganfan.top | `/opt/game2048` |
 | 俄罗斯方块 | `@wg/tetris` | https://tetris.haoaiganfan.top | `/var/www/tetris` |
